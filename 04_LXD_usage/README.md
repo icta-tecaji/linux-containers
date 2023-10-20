@@ -3,7 +3,8 @@ https://ubuntu.com/server/docs/containers-lxd
 https://ubuntu.com/lxd
 
 
-
+https://linuxcontainers.org/lxd/
+https://linuxcontainers.org/incus/
 
 ## Running Docker in LXD
 While LXD and Docker often get compared, they shouldn’t be seen as competing technologies. As illustrated above, they each have their own purpose and place in the digital world. In fact, even running Docker using LXD is possible and suitable in certain circumstances.
