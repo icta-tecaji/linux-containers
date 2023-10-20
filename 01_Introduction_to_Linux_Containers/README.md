@@ -1,4 +1,4 @@
-# Understanding containers
+# Introduction to Linux Containers
 
 Sources:
 - ✅ [LXD vs Docker](https://ubuntu.com/blog/lxd-vs-docker)

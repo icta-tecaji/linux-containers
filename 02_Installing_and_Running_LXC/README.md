@@ -1,4 +1,4 @@
-# LXC usage
+# Installing and Running LXC
 
 Sources:
 - [What's LXC?](https://linuxcontainers.org/lxc/introduction/)
@@ -53,6 +53,21 @@ sudo apt-get install lxc
 
 Your system will then have all the LXC commands available, all its templates as well as the python3 binding should you want to script LXC.
 
+After installing LXC, the following commands will be available in the host system:
+```
+lxc-attach         lxc-create      lxc-snapshot
+lxc-autostart      lxc-destroy     lxc-start
+lxc-cgroup         lxc-device      lxc-start-ephemeral
+lxc-checkconfig    lxc-execute     lxc-stop
+lxc-checkpoint     lxc-freeze      lxc-top
+lxc-clone          lxcfs           lxc-unfreeze
+lxc-config         lxc-info        lxc-unshare
+lxc-console        lxc-ls          lxc-usernsexec
+lxc-copy           lxc-monitor     lxc-wait
+```
+
+Each of the preceding commands has its own [dedicated manual (man) page](https://linuxcontainers.org/lxc/manpages/), which provides a handy reference for the usage of, available options for, and additional information about the command.
+
 Use the following command to check whether the Linux kernel has the required configuration: `lxc-checkconfig`
 
 The above command will also configure a default container network. The name of the bridge is `lxcbr0`:
@@ -89,3 +104,31 @@ https://www.geeksforgeeks.org/how-to-manage-linux-containers-using-lxc/
 
 ## Python API
 - https://github.com/lxc/python3-lxc
+
+
+# Linux Containers
+
+Sources:
+- [Unveiling the Differences: LXC vs Docker – An In-Depth Comparison](https://www.redswitches.com/blog/lxc-vs-docker/)
+
+
+## linuxcontainers.org
+
+[linuxcontainers.org](https://linuxcontainers.org/) is the umbrella project behind Incus, LXC, LXCFS, Distrobuilder and more.
+
+The goal is to offer a **distro and vendor neutral environment** for the development of Linux container technologies.
+
+Our focus is providing containers and virtual machines that run full Linux systems. While VMs supply a complete environment, system containers offer an environment as close as possible to the one you'd get from a VM, but without the overhead that comes with running a separate kernel and simulating all the hardware.
+
+- https://ubuntu.com/blog/what-are-linux-containers
+
+
+
+
+
+https://www.redhat.com/en/topics/containers/whats-a-linux-container
+https://ubuntu.com/blog/what-are-linux-containers
+
+
+https://ubuntu.com/server/docs/containers-lxc
+https://developer.ibm.com/tutorials/l-lxc-containers/
