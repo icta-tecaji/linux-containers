@@ -5,6 +5,7 @@ Sources:
 - [Github LXC](https://github.com/lxc/lxc)
 - [Install LXC and LXC UI on Ubuntu 22.04|20.04|18.04|16.04](https://computingforgeeks.com/how-to-install-lxc-lxc-ui-on-ubuntu/?expand_article=1)
 
+
 ## Introduction
 LXC is a userspace interface for the Linux kernel containment features. Through a powerful API and simple tools, it lets Linux users easily create and manage system or application containers.
 
@@ -68,12 +69,50 @@ lxc-copy           lxc-monitor     lxc-wait
 
 Each of the preceding commands has its own [dedicated manual (man) page](https://linuxcontainers.org/lxc/manpages/), which provides a handy reference for the usage of, available options for, and additional information about the command.
 
-Use the following command to check whether the Linux kernel has the required configuration: `lxc-checkconfig`
+For LXC userspace tools to work properly in the host operating system, you must **ensure that all the kernel features required for LXC support are enabled** in the running host kernel. This can be verified using `lxc-checkconfig`.
 
-The above command will also configure a default container network. The name of the bridge is `lxcbr0`:
+> Everything listed in the `lxc-checkconfig` command output should have the status enabled; otherwise, try restarting the system.
+
+## LXC Default Configuration
+`/etc/lxc/default.conf` is the default configuration file for LXC installed using the standard Ubuntu packages. This configuration file supplies the default configuration for all containers created on the host system.
+- `cat /etc/lxc/default.conf`
+
+The networking will be set up as a virtual Ethernet connection type—that is, veth from the network bridge lxcbr0 for each container that will get created.
+
+The installation will also configure a default container network. The name of the bridge is `lxcbr0`:
 - `ip addr | grep lxc`
 
-### Creating unprivileged containers as a user
+LXC containers can be of two kinds:
+- Privileged containers
+- Unprivileged containers
+
+## Privileged LXC containers
+- https://linuxcontainers.org/lxc/security/
+- https://linuxcontainers.org/lxc/getting-started/#creating-unprivileged-containers-as-a-user
+- https://computingforgeeks.com/how-to-install-lxc-lxc-ui-on-ubuntu/?expand_article=1
+- SK - 143
+- KI - 316
+## Unprivileged LXC containers
+
+## Creating unprivileged containers as a user
+[You can use LXC in two modes](https://linuxcontainers.org/lxc/security/):
+- **Privileged** – This is when you run lxc commands as root user.
+  - The old-style containers, they're not safe at all and should only be used in environments where unprivileged containers aren't available and where you would trust your container's user with root access to the host.
+  - As privileged containers are considered unsafe, new container escape exploits won't be worthy of quick fix.
+- **Unprivileged** – This is when you run commands as a non-root user.
+
+**Unprivileged containers are the safest containers**. Those use a map of uid and gid to allocate a range of uids and gids to a container. That means that uid 0 (root) in the container is actually something like uid 100000 outside the container. So should something go very wrong and an attacker manages to escape the container, they'll find themselves with about as many rights as a nobody user.
+
+Unfortunately this also means that the following common operations aren't allowed:
+- mounting of most file systems
+- creating device nodes
+- any operation against a uid/gid outside of the mapped set
+
+Because of that, most distribution templates simply won't work with those. Instead you should use the **"download" template which will provide you with pre-built images of the distributions that are known to work in such an environment.**
+
+
+
+
 
 
 lxc-create -t lxc-download \
