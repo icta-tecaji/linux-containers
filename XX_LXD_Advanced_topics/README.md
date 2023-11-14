@@ -1,0 +1,2 @@
+- https://documentation.ubuntu.com/lxd/en/latest/explanation/performance_tuning/
+- https://documentation.ubuntu.com/lxd/en/latest/production-setup/

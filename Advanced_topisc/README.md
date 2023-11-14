@@ -1,1 +1,3 @@
-https://linuxcontainers.org/lxc/security/#cgroup-limits
+- https://linuxcontainers.org/lxc/security/#cgroup-limits
+- https://documentation.ubuntu.com/lxd/en/latest/explanation/projects/
+- https://documentation.ubuntu.com/lxd/en/latest/explanation/security/
