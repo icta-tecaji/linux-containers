@@ -222,9 +222,35 @@ To launch a virtual machine with an Ubuntu 22.04 image from the images server us
 <!-- TODO -->
 
 
-## Images
-- https://documentation.ubuntu.com/lxd/en/latest/image-handling/
-- [How to use remote images](https://documentation.ubuntu.com/lxd/en/latest/howto/images_remote/)
+## LXD Images
+- ✅ [About images](https://documentation.ubuntu.com/lxd/en/latest/image-handling/)
+- ✅ [How to use remote images](https://documentation.ubuntu.com/lxd/en/latest/howto/images_remote/)
+- ✅ [How to use remote images](https://documentation.ubuntu.com/lxd/en/latest/howto/images_remote/)
+
+LXD uses an **image-based workflow**. Each instance is based on an image, which contains a basic operating system (for example, a Linux distribution) and some LXD-related information.
+
+Images are **available from remote image stores** but you can also **create your own images**, either based on an existing instances or a rootfs image.
+
+Each image is identified by a fingerprint (SHA256). To make it easier to manage images, LXD allows defining one or more aliases for each image.
+
+When you create an instance using a remote image, **LXD downloads the image and caches it locally**. It is stored in the local image store with the cached flag set. 
+
+> LXD can automatically keep images that come from a remote server up to date.
+
+### How to use remote images
+
+The lxc CLI command is pre-configured with several remote image servers. To see all configured remote servers, enter the following command: `lxc remote list`
+
+Remote servers that use the simple streams format are pure image servers. Servers that use the lxd format are LXD servers, which either serve solely as image servers or might provide some images in addition to serving as regular LXD servers.
+
+- To list all remote images on a server, enter the following command: `lxc image list <remote>:`
+- To add a remote image server follow the instructions in the [Add a remote image server](https://documentation.ubuntu.com/lxd/en/latest/howto/images_remote/#add-a-remote-server) section.
+- Filter available images by name: `lxc image list <remote>:<image_name>`
+- To view information about an image, enter the following command: `lxc image info <remote>:<image_name>` (example: `lxc image info images:openwrt/23.05`)
+
+### How to manage images
+
+When working with images, you can inspect various information about the available images, view and edit their properties and [configure aliases to refer to specific images](https://documentation.ubuntu.com/lxd/en/latest/howto/images_manage/#configure-image-aliases). You can also export an image to a file, which can be useful to copy or import it on another machine.
 
 ## Create instances
 - [How to create instances](https://documentation.ubuntu.com/lxd/en/latest/howto/instances_create/#instances-create)
@@ -241,9 +267,6 @@ Enter the following command to create a container: `lxc launch|init <image_serve
 - https://documentation.ubuntu.com/lxd/en/latest/tutorial/first_steps/#configure-instances
 - https://documentation.ubuntu.com/lxd/en/latest/reference/instance_options/#instance-options
 
-
-## Mounting storage volumes
-- [Mount a file system from the instance](https://documentation.ubuntu.com/lxd/en/latest/howto/instances_access_files/#mount-a-file-system-from-the-instance)
 
 
 ## Manage snapshots
@@ -269,8 +292,6 @@ https://ubuntu.com/lxd
 https://linuxcontainers.org/lxd/
 https://linuxcontainers.org/incus/
 
-
-## LXD Images
 
 ## Running Docker in LXD
 While LXD and Docker often get compared, they shouldn’t be seen as competing technologies. As illustrated above, they each have their own purpose and place in the digital world. In fact, even running Docker using LXD is possible and suitable in certain circumstances.
