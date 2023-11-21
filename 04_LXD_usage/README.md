@@ -1,9 +1,10 @@
 # LXD
 
 Sources:
-- [Run system containers with LXD](https://ubuntu.com/lxd)
+- ✅ [Run system containers with LXD](https://ubuntu.com/lxd)
 - ✅ [LXD Docs](https://documentation.ubuntu.com/lxd/en/latest/tutorial/first_steps/)
-- [LXD Github](https://github.com/canonical/lxd)
+- ✅ [LXD Github](https://github.com/canonical/lxd)
+- ✅ [LXD 2.0: Blog post series](https://stgraber.org/2016/03/11/lxd-2-0-blog-post-series-012/)
 - [Containers - LXD](https://ubuntu.com/server/docs/containers-lxd)
 
 ## LXD Introduction
@@ -20,8 +21,7 @@ You should consider using LXD if you want to containerize different environments
 
 > **[LXD is now under Canonical](https://linuxcontainers.org/lxd/)** Canonical, the creator and main contributor of the LXD project has decided that after over 8 years as part of the Linux Containers community, the project would now be better served directly under Canonical’s own set of projects.
 
-LXD provides **a better user experience to LXC** by building on top of LXC. LXD
-uses `liblxc` and its Go language bindings to create and manage containers.
+LXD provides **a better user experience to LXC** by building on top of LXC. LXD uses `liblxc` and its Go language bindings to create and manage containers.
 
 ## Releases
 The current LTS releases are `LXD 5.0.x` (snap channel 5.0/stable) and `LXD 4.0.x` (snap channel 4.0/stable).
@@ -35,15 +35,26 @@ The LTS releases **follow the Ubuntu release schedule and are released every two
 LTS releases are recommended for production environments, because they benefit from regular bugfix and security updates. However, there are no new features added to an LTS release, nor any kind of behavioral change.
 
 ## About lxd and lxc
-- [About lxd and lxc](https://documentation.ubuntu.com/lxd/en/latest/explanation/lxd_lxc/#lxd-lxc)
+- ✅ [About lxd and lxc](https://documentation.ubuntu.com/lxd/en/latest/explanation/lxd_lxc/#lxd-lxc)
+
+LXD and LXC are two distinct implementations of Linux containers.
+- **LXC** is a low-level user space interface for the Linux kernel containment features. It consists of tools (lxc-* commands), templates, and library and language bindings.
+- **LXD** is a more intuitive and user-friendly tool aimed at making it easy to work with Linux containers. It is an alternative to LXC’s tools and distribution template system, with the added features that come from being controllable over the network. Under the hood, LXD uses LXC to create and manage the containers. LXD provides a superset of the features that LXC supports, and it is easier to use. Therefore, if you are unsure which of the tools to use, you should go for LXD. LXC should be seen as an alternative for experienced users that want to run Linux containers on distributions that don’t support LXD.
+
+### LXD daemon and LXD client
+The central part of LXD is its daemon. It runs persistently in the background, manages the instances, and handles all requests. The daemon provides a REST API that you can access directly or through a client (for example, the default command-line client that comes with LXD).
 
 LXD is frequently confused with LXC, and the fact that LXD provides both a lxd command and a lxc command doesn’t make things easier.
 
 > **Somewhat confusingly, LXD also provides an lxc command. This is different from the lxc command in the LXC package.**
 
-<!-- TODO -->
-<!-- TODO -->
-<!-- TODO -->
+To control LXD, you typically use two different commands: lxd and lxc.
+- **LXD daemon**
+    - The `lxd` command controls the LXD daemon. Since the daemon is typically started automatically, *you hardly ever need to use the lxd command*. An exception is the `lxd init` subcommand that you run to initialize LXD.
+    - There are also some subcommands for debugging and administrating the daemon, but they are intended for advanced users only.
+- **LXD client**
+    - The `lxc` command is a command-line client for LXD, which you can use to interact with the LXD daemon. You use the lxc command to manage your instances, the server settings, and overall the entities you create in LXD.
+    - The lxc tool is not the only client you can use to interact with the LXD daemon. You can also use the API, the UI, or a custom LXD client.
 
 ## Install LXD
 - ✅ [How to install LXD](https://documentation.ubuntu.com/lxd/en/latest/installing/)
@@ -53,6 +64,9 @@ The easiest way to install LXD is to install the snap package.
     - `snap version`: If you see a table of version numbers, snap is installed and you can continue with the next step of installing LXD. Otherwise install snap using the [guide](./snap.md).
     - Enter the following command to install LXD: `sudo snap install lxd`
         - If you get an error message that the snap is already installed, run the following command to refresh it and ensure that you are running an up-to-date version: `sudo snap refresh lxd`
+        - If snap is already installed and you want to install the latest stable version of LXD, run the following commands:
+            - `sudo snap remove lxd`
+            - `sudo snap install lxd`
     - Check the installed snaps: `snap list`
     - Check the version of LXD that you have installed: `lxd --version`
 
@@ -75,9 +89,10 @@ The tool asks a series of questions to determine the required configuration. The
 - **Remote access**: Allows remote access to the server over the network. The default answer is `no`, which means remote access is not allowed. 
 - **Automatic image update**: You can download images from image servers. In this case, images can be updated automatically. The default answer is `yes`, which means that LXD will update the downloaded images regularly.
 
+Check if the default bridge and storage pool have been created: `lxc network list` and `lxc storage list`.
+
 ## Remote image servers
-- [Remote image servers](https://documentation.ubuntu.com/lxd/en/latest/reference/remote_image_servers/)
-- [How to use remote images](https://documentation.ubuntu.com/lxd/en/latest/howto/images_remote/)
+- ✅ [Remote image servers](https://documentation.ubuntu.com/lxd/en/latest/reference/remote_image_servers/)
 
 Unlike LXC, which uses an operating system template script to create its container, **LXD uses an image as the basis for its container**. It will download base images from a remote image store or make use of available images from a local image store. The image stores are simply LXD servers exposed over a network.
 
@@ -99,16 +114,26 @@ Remote servers that use the simple streams format are pure image servers. LXD su
 - LXD servers
 
 ## LXD instances (containers and VMs)
-- [About containers and VMs](https://documentation.ubuntu.com/lxd/en/latest/explanation/containers_and_vms/#containers-and-vms)
-- [About instances](https://documentation.ubuntu.com/lxd/en/latest/explanation/instances/)
+- ✅ [About containers and VMs](https://documentation.ubuntu.com/lxd/en/latest/explanation/containers_and_vms/#containers-and-vms)
+- ✅ [About instances](https://documentation.ubuntu.com/lxd/en/latest/explanation/instances/)
 
 LXD provides support for two different types of instances: system containers and virtual machines.
-- When running a **system container**, LXD simulates a virtual version of a full operating system. To do this, it uses the functionality provided by the kernel running on the host system.
-- When running a **virtual machine**, LXD uses the hardware of the host system, but the kernel is provided by the virtual machine. Therefore, virtual machines can be used to run, for example, a different operating system.
+- When running a **system container**, LXD simulates a virtual version of a full operating system. To do this, it uses the functionality provided by the kernel running on the host system. You should **use a system container** to leverage the smaller size and **increased performance** if all functionality you require is compatible with the kernel of your host operating system.
+- When running a **virtual machine**, LXD uses the hardware of the host system, but the kernel is provided by the virtual machine. Therefore, virtual machines can be used to run, for example, a different operating system. If you need functionality that is not supported by the OS kernel of your host system or you want to run a completely different OS, use a virtual machine.
 
-<!-- TODO -->
-<!-- TODO -->
-<!-- TODO -->
+System containers:
+- System containers use the OS kernel of the host system instead of creating their own environment. If you run several system containers, they all share the same kernel, which makes them faster and more light-weight than virtual machines.
+- To run a full Linux OS inside a container
+- Utilises Kernel of the host
+- Identical performance to bare metal
+
+Virtual machines:
+- Virtual machines emulate a physical machine, using the hardware of the host system from a full and completely isolated operating system.
+- For workloads needing a different kernel or OS than the host
+- Legacy free
+- Cloud-like experience
+
+![Virtual machines vs. system containers](https://documentation.ubuntu.com/lxd/en/latest/_images/virtual-machines-vs-system-containers.svg)
 
 
 ## Running Your First System Container with LXD
@@ -185,16 +210,13 @@ To **delete a file** from your instance, enter the following command:
 `lxc file delete <instance_name>/<path_to_file>`
 
 ## Running Your First Virtual Machine with LXD
-Launch a VM called ubuntu-vm using the Ubuntu 22.04 image:
-- lxc launch ubuntu:22.04 ubuntu-vm --vm
+
+To launch a virtual machine with an Ubuntu 22.04 image from the images server using the instance name ubuntu-vm, enter the following command:
+- `lxc launch ubuntu:22.04 ubuntu-vm --vm`
 
 > Even though you are using the same image name to launch the instance, LXD downloads a slightly different image that is compatible with VMs.
 
-Commands: For containers, this always works and is handled directly by LXD. For virtual machines, the lxd-agent process must be running inside of the virtual machine for this to work.
-
-Files: For virtual machines, the lxd-agent process must be running inside of the virtual machine for them to work.
-
-
+<!-- nimamo podpore za KVM, zato ne moremo zagnati VM-ja -->
 <!-- TODO -->
 <!-- TODO -->
 <!-- TODO -->
@@ -202,6 +224,7 @@ Files: For virtual machines, the lxd-agent process must be running inside of the
 
 ## Images
 - https://documentation.ubuntu.com/lxd/en/latest/image-handling/
+- [How to use remote images](https://documentation.ubuntu.com/lxd/en/latest/howto/images_remote/)
 
 ## Create instances
 - [How to create instances](https://documentation.ubuntu.com/lxd/en/latest/howto/instances_create/#instances-create)

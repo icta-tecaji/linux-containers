@@ -5,7 +5,7 @@ Sources:
 - [Github LXC](https://github.com/lxc/lxc)
 - [Install LXC and LXC UI on Ubuntu 22.04|20.04|18.04|16.04](https://computingforgeeks.com/how-to-install-lxc-lxc-ui-on-ubuntu/?expand_article=1)
 - [Introduction to security](https://linuxcontainers.org/lxc/security/)
-
+- [Containers - LXC](https://ubuntu.com/server/docs/containers-lxc)
 
 ## Introduction
 LXC is a userspace interface for the Linux kernel containment features. Through a powerful API and simple tools, it lets Linux users easily create and manage system or application containers.

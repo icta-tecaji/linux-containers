@@ -112,6 +112,13 @@ The size of rootfs is smaller than a typical OS disk image, since it does not co
 A rootfs can further be reduced in size by making it contain just the application and configuring it to share the rootfs of the host machine. Using copy-on-write (COW) techniques, a single reduced read-only disk image may be shared between multiple containers.
 
 
+## Application containers vs. system containers
+Application containers (as provided by, for example, Docker) package a single process or application. System containers, on the other hand, simulate a full operating system and let you run multiple processes at the same time.
+
+Therefore, application containers are suitable to provide separate components, while system containers provide a full solution of libraries, applications, databases and so on. In addition, you can use system containers to create different user spaces and isolate all processes belonging to each user space, which is not what application containers are intended for.
+
+![Application containers vs. system containers](https://documentation.ubuntu.com/lxd/en/latest/_images/application-vs-system-containers.svg)
+
 
 ## TODO
 https://www.redhat.com/en/topics/containers?sc_cid=70160000000x4xDAAQ
