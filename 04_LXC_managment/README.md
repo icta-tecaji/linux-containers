@@ -14,3 +14,6 @@
 
 ## Update multiple containers
 - https://www.cyberciti.biz/faq/how-to-update-debian-or-ubuntu-linux-containers-lxc/
+
+
+-lxc-console

@@ -7,6 +7,8 @@ Sources:
 - [Introduction to security](https://linuxcontainers.org/lxc/security/)
 - [Containers - LXC](https://ubuntu.com/server/docs/containers-lxc)
 - https://developer.ibm.com/tutorials/l-lxc-containers/
+- https://www.geeksforgeeks.org/how-to-manage-linux-containers-using-lxc/
+- https://www.freecodecamp.org/news/linux-containers-lxc-lxd/
 
 ## Introduction
 LXC is a userspace interface for the Linux kernel containment features. Through a powerful API and simple tools, it lets Linux users easily create and manage system or application containers.
@@ -55,6 +57,8 @@ sudo apt-get update
 sudo apt-get upgrade # (optional but recommended)
 sudo apt-get install lxc
 ```
+
+This will pull in the required and recommended dependencies, as well as set up a network bridge for containers to use.
 
 Your system will then have all the LXC commands available, all its templates as well as the python3 binding should you want to script LXC.
 
@@ -126,6 +130,8 @@ sudo lxc-create -t download \
 sudo lxc-start -d -n my-first-debian
 # List all the containers in the host system.
 sudo lxc-ls --fancy
+# Obtain detailed container information
+sudo lxc-info -n my-first-debian
 # Get a default shell session inside the container.
 sudo lxc-attach -n my-first-debian
 # Run ID and exit
@@ -134,7 +140,7 @@ ps axfwwu
 exit
 # Stop the container.
 sudo lxc-stop -n my-first-debian
-# Permanently delete the container.
+# Permanently delete the container. Removes the container, including its rootfs.
 sudo lxc-destroy -n my-first-debian
 ```
 
@@ -186,25 +192,9 @@ The rootfs directory looks like a regular Linux filesystem. You can manipulate t
 - `exit`
 
 
-
-
-
-
-
-
-
-
-
-https://www.freecodecamp.org/news/linux-containers-lxc-lxd/
-
-https://www.thegeekstuff.com/2016/01/create-lxc-containers/
-
-https://www.thegeekstuff.com/2016/01/install-lxc-linux-containers/
-
-https://www.geeksforgeeks.org/how-to-manage-linux-containers-using-lxc/
-
-
 ## Unprivileged LXC containers
+Unprivileged containers are more limited, for instance being unable to create device nodes or mount block-backed filesystems. However they are less dangerous to the host, as the root UID in the container is mapped to a non-root UID on the host.
+
 - **Unprivileged** – This is when you run commands as a non-root user.
   - Using unprivileged containers is the **recommended way of creating and running containers for most configurations.**
   - Unprivileged containers are **safe by design**. 
@@ -229,6 +219,8 @@ Unfortunately the following common operations aren't allowed:
 Because of that, most distribution templates simply won't work with those. Instead you should use the **"download" template which will provide you with pre-built images of the distributions that are known to work in such an environment.**
 
 ### Creating unprivileged containers as a user
+- ✅ [Ubuntu 18.04 and unprivileged LXC](https://www.kubos.cz/2018/07/20/ubuntu-unprivileged-lxc)
+
 [Follow the steps](https://linuxcontainers.org/lxc/getting-started/#creating-unprivileged-containers-as-a-user) to setup the host:
 1. Make sure your user has a uid and gid map defined in `/etc/subuid` and `/etc/subgid`.
     - On Ubuntu systems, a default allocation of 65536 uids and gids is given to every new user on the system, so you should already have one. If not, you'll have to use usermod to give yourself one.
@@ -237,7 +229,7 @@ Because of that, most distribution templates simply won't work with those. Inste
 3. The last step is to create an LXC configuration file.
 ```bash
 mkdir -p ~/.config/lxc
-cp /etc/lxc/default.conf ~/.config/lxc/default.conf
+echo "lxc.include = /etc/lxc/default.conf" >> ~/.config/lxc/default.conf
 MS_UID="$(grep "$(id -un)" /etc/subuid  | cut -d : -f 2)"
 ME_UID="$(grep "$(id -un)" /etc/subuid  | cut -d : -f 3)"
 MS_GID="$(grep "$(id -un)" /etc/subgid  | cut -d : -f 2)"
@@ -245,40 +237,34 @@ ME_GID="$(grep "$(id -un)" /etc/subgid  | cut -d : -f 3)"
 echo "lxc.idmap = u 0 $MS_UID $ME_UID" >> ~/.config/lxc/default.conf
 echo "lxc.idmap = g 0 $MS_GID $ME_GID" >> ~/.config/lxc/default.conf
 ```
-
-And now, create your first container with:
+4. Check the configuration file:
+  - `cat ~/.config/lxc/default.conf`
+5. Add (as host computer root) ACL for AppArmor. It adds execution right (to allow traversal) for user 100000 (proces with PID 0 in container):
+  - `sudo apt install acl`
+  - `setfacl -m u:100000:x /home/administrator/`
+  - `setfacl -m u:100000:x /home/administrator/.local`
+  - `setfacl -m u:100000:x /home/administrator/.local/share`
+6. And now, create your first container with:
 ```bash
 # Create a container with the given OS template and options.
-systemd-run --unit=my-unit --user --scope -p "Delegate=yes" -- lxc-create -t download \
+lxc-create -t download \
   -n my-first-debian -- \
   --dist debian \
   --release bookworm \
   --arch amd64
 
 # Start running the container that was just created.
-systemd-run --unit=my-unit --user --scope -p "Delegate=yes" -- lxc-start -d -n my-first-debian
+lxc-start -d -n my-first-debian
 # List all the containers in the host system.
 lxc-ls --fancy
 # Get a default shell session inside the container.
-sudo lxc-attach -n my-first-debian
+lxc-attach -n my-first-debian
 # Run ID and exit
 id
 ps axfwwu
 exit
 # Stop the container.
-sudo lxc-stop -n my-first-debian
+lxc-stop -n my-first-debian
 # Permanently delete the container.
 lxc-destroy -n my-first-debian
 ```
-
-
-
-
-
-
-
-
-
-https://developer.ibm.com/tutorials/l-lxc-containers/
-- https://computingforgeeks.com/how-to-install-lxc-lxc-ui-on-ubuntu/?expand_article=1 -->
-
