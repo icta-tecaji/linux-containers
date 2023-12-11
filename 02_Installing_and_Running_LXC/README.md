@@ -6,6 +6,7 @@ Sources:
 - [Install LXC and LXC UI on Ubuntu 22.04|20.04|18.04|16.04](https://computingforgeeks.com/how-to-install-lxc-lxc-ui-on-ubuntu/?expand_article=1)
 - [Introduction to security](https://linuxcontainers.org/lxc/security/)
 - [Containers - LXC](https://ubuntu.com/server/docs/containers-lxc)
+- https://developer.ibm.com/tutorials/l-lxc-containers/
 
 ## Introduction
 LXC is a userspace interface for the Linux kernel containment features. Through a powerful API and simple tools, it lets Linux users easily create and manage system or application containers.
@@ -137,6 +138,72 @@ sudo lxc-stop -n my-first-debian
 sudo lxc-destroy -n my-first-debian
 ```
 
+## Building a LXC container
+We can create our first container using a template. The lxc-download file, like the rest of the templates in the templates directory, is a script written in bash:
+- `ls -la /usr/share/lxc/templates/`
+- [Image server for Incus and LXC](https://images.linuxcontainers.org/). In LXC, this image server can be used by selecting the `lxc-download` template. 
+
+List all available images from download template:
+- `/usr/share/lxc/templates/lxc-download -l`
+
+Let's start by building a container using the lxc-download template, which will ask for the distribution, release, and architecture, then use the appropriate template to create the filesystem and configuration for us:
+- `sudo lxc-create -t download -n my-first-ctr`
+- Choose the following options:
+  - Distribution: ubuntu
+  - Release: jammy
+  - Architecture: amd64
+- Let's list all containers: `sudo lxc-ls -f`
+- Our container is currently not running; let's start it in the background and increase the log level to DEBUG: `sudo lxc-start -n my-first-ctr -d -l DEBUG`
+- Let's list all containers: `sudo lxc-ls -f`
+- To obtain more information about the container run the following: `sudo lxc-info -n my-first-ctr`
+- The new container is now connected to the host bridge `lxcbr0`:
+  - `brctl show`
+  - `ip a s lxcbr0`
+  - `ip a s <container-veth-name>`
+
+Using the download template and not specifying any network settings, the container obtains its IP address from a dnsmasq server that runs on a private network, `10.0.3.0/24` in this case. The host allows the container to connect to the rest of the network and the Internet using NAT rules in iptables:
+  - `sudo iptables -L -n -t nat`
+
+Other containers connected to the bridge will have access to each other and to the host, as long as they are all connected to the same bridge and are not tagged with different VLAN IDs.
+
+Let's run attach with the container, list all processes, and network interfaces, and check connectivity:
+  - `sudo lxc-attach -n my-first-ctr`
+  - `ps axfw`
+  - `ip a s`
+  - `ping -c 3 google.com`
+  - `exit`
+
+> Notice how the hostname changed on the terminal once we attached to the container. This is an example of how LXC uses the UTS namespaces.
+
+Let's examine the directory that was created after building the container: 
+- `sudo ls -la /var/lib/lxc/my-first-ctr`
+- `sudo ls -la /var/lib/lxc/my-first-ctr/rootfs`
+
+The rootfs directory looks like a regular Linux filesystem. You can manipulate the container directly by making changes to the files there.
+- `sudo touch /var/lib/lxc/my-first-ctr/rootfs/test-file`
+- `sudo lxc-attach -n my-first-ctr`
+- `ls -al`
+- `exit`
+
+
+
+
+
+
+
+
+
+
+
+https://www.freecodecamp.org/news/linux-containers-lxc-lxd/
+
+https://www.thegeekstuff.com/2016/01/create-lxc-containers/
+
+https://www.thegeekstuff.com/2016/01/install-lxc-linux-containers/
+
+https://www.geeksforgeeks.org/how-to-manage-linux-containers-using-lxc/
+
+
 ## Unprivileged LXC containers
 - **Unprivileged** – This is when you run commands as a non-root user.
   - Using unprivileged containers is the **recommended way of creating and running containers for most configurations.**
@@ -212,55 +279,6 @@ lxc-destroy -n my-first-debian
 
 
 
-## Images
-- https://images.linuxcontainers.org/
-Templates: 
-- ls /usr/share/lxc/templates/
-- list all available images from download template:
-- /usr/share/lxc/templates/lxc-download -l
-
-
-https://www.freecodecamp.org/news/linux-containers-lxc-lxd/
-
-https://www.thegeekstuff.com/2016/01/create-lxc-containers/
-
-https://www.thegeekstuff.com/2016/01/install-lxc-linux-containers/
-
-https://www.geeksforgeeks.org/how-to-manage-linux-containers-using-lxc/
-
-
-
-## Python API
-- https://github.com/lxc/python3-lxc
-
-
-# Linux Containers
-
-Sources:
-- [Unveiling the Differences: LXC vs Docker – An In-Depth Comparison](https://www.redswitches.com/blog/lxc-vs-docker/)
-
-## Attach 
-https://www.cyberciti.biz/faq/how-to-update-debian-or-ubuntu-linux-containers-lxc/
-
-## linuxcontainers.org
-
-[linuxcontainers.org](https://linuxcontainers.org/) is the umbrella project behind Incus, LXC, LXCFS, Distrobuilder and more.
-
-The goal is to offer a **distro and vendor neutral environment** for the development of Linux container technologies.
-
-Our focus is providing containers and virtual machines that run full Linux systems. While VMs supply a complete environment, system containers offer an environment as close as possible to the one you'd get from a VM, but without the overhead that comes with running a separate kernel and simulating all the hardware.
-
-- https://ubuntu.com/blog/what-are-linux-containers
-
-
-
-
-
-https://www.redhat.com/en/topics/containers/whats-a-linux-container
-https://ubuntu.com/blog/what-are-linux-containers
-
-
-https://ubuntu.com/server/docs/containers-lxc
 https://developer.ibm.com/tutorials/l-lxc-containers/
 - https://computingforgeeks.com/how-to-install-lxc-lxc-ui-on-ubuntu/?expand_article=1 -->
 

@@ -2,6 +2,9 @@
 
 Sources:
 - ✅ [LXD vs Docker](https://ubuntu.com/blog/lxd-vs-docker)
+- [Unveiling the Differences: LXC vs Docker – An In-Depth Comparison](https://www.redswitches.com/blog/lxc-vs-docker/)
+- https://www.redhat.com/en/topics/containers/whats-a-linux-container
+- https://ubuntu.com/blog/what-are-linux-containers
 
 Nowadays, deploying applications inside some sort of a Linux container is a widely adopted practice, primarily due to the evolution of the tooling and the ease of use it presents.
 
@@ -127,7 +130,15 @@ https://www.redhat.com/en/topics/containers?sc_cid=70160000000x4xDAAQ
 Benefits:
 -offering speed, flexibility, and isolation from the underlying system
 
+## linuxcontainers.org
 
+[linuxcontainers.org](https://linuxcontainers.org/) is the umbrella project behind Incus, LXC, LXCFS, Distrobuilder and more.
+
+The goal is to offer a **distro and vendor neutral environment** for the development of Linux container technologies.
+
+Our focus is providing containers and virtual machines that run full Linux systems. While VMs supply a complete environment, system containers offer an environment as close as possible to the one you'd get from a VM, but without the overhead that comes with running a separate kernel and simulating all the hardware.
+
+- https://ubuntu.com/blog/what-are-linux-containers
 
 ## Docker vs Linux Containers
 - https://earthly.dev/blog/lxc-vs-docker/
