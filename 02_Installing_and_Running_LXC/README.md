@@ -6,9 +6,10 @@ Sources:
 - [Install LXC and LXC UI on Ubuntu 22.04|20.04|18.04|16.04](https://computingforgeeks.com/how-to-install-lxc-lxc-ui-on-ubuntu/?expand_article=1)
 - [Introduction to security](https://linuxcontainers.org/lxc/security/)
 - [Containers - LXC](https://ubuntu.com/server/docs/containers-lxc)
-- https://developer.ibm.com/tutorials/l-lxc-containers/
-- https://www.geeksforgeeks.org/how-to-manage-linux-containers-using-lxc/
-- https://www.freecodecamp.org/news/linux-containers-lxc-lxd/
+- [How to Use Linux Containers With LXC and LXD](https://www.freecodecamp.org/news/linux-containers-lxc-lxd/)
+- [How to Manage Linux Containers using LXC](https://www.geeksforgeeks.org/how-to-manage-linux-containers-using-lxc/)
+- [LXC: Linux container tools](https://developer.ibm.com/tutorials/l-lxc-containers/)
+
 
 ## Introduction
 LXC is a userspace interface for the Linux kernel containment features. Through a powerful API and simple tools, it lets Linux users easily create and manage system or application containers.
@@ -31,6 +32,7 @@ LXC is currently made of a few separate components:
 - A set of standard tools to control the containers
 - Distribution container templates
 
+
 ## Releases
 LXC is supported by all modern GNU/Linux distributions, and there should already be an LXC package available from the standard package repositories for your distro.
 
@@ -39,6 +41,7 @@ LXC is supported by all modern GNU/Linux distributions, and there should already
 LXC 5.0 and 4.0 are long term support releases:
 - LXC 5.0 will be supported until June 1st 2027 (current: LXC 5.0.3)
 - LXC 4.0 will be supported until June 1st 2025 (current: LXC 4.0.12)
+
 
 ## Installation
 [Requirements](https://linuxcontainers.org/lxc/getting-started/#requirements):
@@ -81,6 +84,7 @@ For LXC userspace tools to work properly in the host operating system, you must 
 
 > Everything listed in the `lxc-checkconfig` command output should have the status enabled; otherwise, try restarting the system.
 
+
 ## LXC Default Configuration
 `/etc/lxc/default.conf` is the default configuration file for LXC installed using the standard Ubuntu packages. This configuration file supplies the default configuration for all containers created on the host system.
 - `cat /etc/lxc/default.conf`
@@ -95,6 +99,7 @@ LXC supports **user namespaces, and this is the recommended way to secure LXC co
 Based on user namespaces, LXC containers can be classified into two types:
 - Privileged containers
 - Unprivileged containers
+
 
 ## Privileged LXC containers
 **Privileged** - This is when you run lxc commands as root user.
@@ -143,6 +148,7 @@ sudo lxc-stop -n my-first-debian
 # Permanently delete the container. Removes the container, including its rootfs.
 sudo lxc-destroy -n my-first-debian
 ```
+
 
 ## Building a LXC container
 We can create our first container using a template. The lxc-download file, like the rest of the templates in the templates directory, is a script written in bash:

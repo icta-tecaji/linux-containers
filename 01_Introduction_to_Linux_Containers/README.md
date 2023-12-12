@@ -2,41 +2,13 @@
 
 Sources:
 - ✅ [LXD vs Docker](https://ubuntu.com/blog/lxd-vs-docker)
-- [Unveiling the Differences: LXC vs Docker – An In-Depth Comparison](https://www.redswitches.com/blog/lxc-vs-docker/)
-- https://www.redhat.com/en/topics/containers/whats-a-linux-container
-- https://ubuntu.com/blog/what-are-linux-containers
+- ✅ [What's a Linux container?](https://www.redhat.com/en/topics/containers/whats-a-linux-container)
+- ✅ [What are Linux containers?](https://ubuntu.com/blog/what-are-linux-containers)
+
+--- 
 
 Nowadays, deploying applications inside some sort of a Linux container is a widely adopted practice, primarily due to the evolution of the tooling and the ease of use it presents.
 
-## Introduction to Linux Containers
-Containerization is the next logical step in virtualization, and there is a huge buzz around this technology. Containers can **provide virtualization at both the operating system level and the application level.**
-
-Some of the possibilities with containers are as follows:
-- Provide a complete operating system environment that is sandboxed (isolated)
-- Allow packaging and isolation of applications with their entire runtime environment
-- Provide a portable and lightweight environment
-- Help to maximize resource utilization in data centers
-- Aid different development, test, and production deployment workflows
-
-## Container Definition
-A **container can be defined as a single operating system image, bundling a set of isolated applications and their dependent resources so that they run separated from the host machine.** There may be multiple such containers running within the same host machine.
-
-Containers can be classified into two types:
-- **Operating system level**: An entire operating system runs in an isolated space within the host machine, sharing the same kernel as the host machine.
-- **Application level**: An application or service, and the minimal processes required by that application, runs in an isolated space within the host machine.
-
-## What types of containers are there?
-- **System containers** (as run by LXD) are similar to virtual or physical machines. They **run a full operating system inside them**, you can run any type of workload, and you manage them exactly as you would a virtual or a physical machine. System containers are usually **long-lasting** and you could host **several applications** within a single system container.
-- **Application containers** (such as Docker), also known as process containers, are containers that **package and run a single process or a service** per container. They run **stateless types of workloads** that are meant to be ephemeral. This means that these containers are temporary, and you can create, delete and replace containers easily as needed.
-
-> A common confusion for potential users of LXD is that LXD is an alternative to Docker or Kubernetes. However, LXD and Docker are not competing container technologies, and they tend to serve completely different purposes.
-
-![LXD vs Docker](./images/system_vs_app_cont.png)
-<!-- Source: https://ubuntu.com/blog/lxd-vs-docker -->
-
-Both application and system containers share a kernel with the host operating system and utilize it to create isolated processes.
-- Application containers run a single app/process.
-- System containers run a full operating system giving them flexibility for the workload types they support.
 
 ## Containerization vs traditional virtualization
 Virtualization was developed as an effort to **fully utilize available computing resources**. Virtualization enables multiple virtual machines to run on a single host for different purposes with their own isolated space. 
@@ -51,16 +23,50 @@ Containerization differs from traditional virtualization technologies and offers
 - Starting a container happens nearly instantly compared to the slower boot process of virtual machines.
 - Containers are portable and can reliably regenerate a system environment with required software packages, irrespective of the underlying host operating system.
 
+
+## Introduction to Linux Containers
+Containerization is the next logical step in virtualization, and there is a huge buzz around this technology. Containers can **provide virtualization at both the operating system level and the application level.**
+
+Some of the possibilities with containers are as follows:
+- Provide a complete operating system environment that is sandboxed (isolated)
+- Allow packaging and isolation of applications with their entire runtime environment
+- Provide a portable and lightweight environment
+- Help to maximize resource utilization in data centers
+- Aid different development, test, and production deployment workflows
+
+
+## Container Definition
+A **container can be defined as a single operating system image, bundling a set of isolated applications and their dependent resources so that they run separated from the host machine.** There may be multiple such containers running within the same host machine.
+
+Containers can be classified into two types:
+- **Operating system level**: An entire operating system runs in an isolated space within the host machine, sharing the same kernel as the host machine.
+- **Application level**: An application or service, and the minimal processes required by that application, runs in an isolated space within the host machine.
+
+
+## What types of containers are there?
+- **System containers** (as run by LXD) are similar to virtual or physical machines. They **run a full operating system inside them**, you can run any type of workload, and you manage them exactly as you would a virtual or a physical machine. System containers are usually **long-lasting** and you could host **several applications** within a single system container. That means you can install packages inside them, you can manage services, define backup policies, monitoring, and all other aspects as you usually would with a virtual machine.
+- **Application containers** (such as Docker), also known as process containers, are containers that **package and run a single process or a service** per container. They run **stateless types of workloads** that are meant to be ephemeral. This means that these containers are temporary, and you can create, delete and replace containers easily as needed. Usually, you don’t need to care about the lifecycle of those containers.
+
+> A common confusion for potential users of LXD is that LXD is an alternative to Docker or Kubernetes. However, LXD and Docker are not competing container technologies, and they tend to serve completely different purposes.
+
+![LXD vs Docker](./images/system_vs_app_cont.png)
+<!-- Source: https://ubuntu.com/blog/lxd-vs-docker -->
+
+Both application and system containers share a kernel with the host operating system and utilize it to create isolated processes.
+- Application containers run a single app/process.
+- System containers run a full operating system giving them flexibility for the workload types they support.
+
+
 ## Container History
-Container technology has existed for a long time in different forms, but it has significantly gained popularity recently in the Linux world with the introduction of native containerization support in the Linux kernel.
+Container technology has existed for a long time in different forms, but it has significantly gained popularity recently in the Linux world with the introduction of native containerization support in the Linux kernel. System containers are technically the oldest type of containers. 
 - 1982: Chroot (Unix-like operating systems)
-- 2000: Jail (FreeBSD)
-- 2000: Virtuozzo containers (Linux, Windows (Parallels Inc. version))
-- 2001: Linux VServer (Linux, Windows)
-- 2004: Solaris containers (zones) (Sun Solaris, Open Solaris)
-- 2005: OpenVZ Linux (open source version of Virtuozzo)
+- 1999: **BSD introduced jails**, a way of running a second BSD system on the same kernel as the main system.
+- 2001: Linux implementation of the concept through Linux **vServer**. This was a separate project with a big patch set towards Linux kernel aimed at implementing a functionality similar to BSD jails.
+- 2004: Solaris (Sun Solaris, Open Solaris) grew Zones which was the same concept but a part of Solaris OS.
+- 2005: OpenVZ project started to implement multiple VPSs (virtual private servers) on Linux.
 - 2008: LXC (Linux)
 - 2013: Docker (Linux, FreeBSD, Windows)
+
 
 ## Features to Enable Containers
 Containers rely on the following features in the Linux kernel to get a contained or isolated area within the host machine. This area is closely related to a virtual machine, but without the need for a hypervisor.
@@ -115,40 +121,56 @@ The size of rootfs is smaller than a typical OS disk image, since it does not co
 A rootfs can further be reduced in size by making it contain just the application and configuring it to share the rootfs of the host machine. Using copy-on-write (COW) techniques, a single reduced read-only disk image may be shared between multiple containers.
 
 
-## Application containers vs. system containers
-Application containers (as provided by, for example, Docker) package a single process or application. System containers, on the other hand, simulate a full operating system and let you run multiple processes at the same time.
+## LXC and linuxcontainers.org
 
-Therefore, application containers are suitable to provide separate components, while system containers provide a full solution of libraries, applications, databases and so on. In addition, you can use system containers to create different user spaces and isolate all processes belonging to each user space, which is not what application containers are intended for.
+Linux containers, also known as LXC, was the first implementation of system containers that was entirely based on mainline Linux features. This means that you could take a completely clean upstream kernel, or the kernel as distributed by any Linux distribution, and use that to create containers on Linux. LXC itself is a low-level tool that can create both system containers and application containers.
+- LXC containers are often considered as something in the middle between a chroot and a full-fledged virtual machine.
+- The goal of LXC is to create an environment as close as possible to a standard Linux installation but without the need for a separate kernel.
+- LXC containers are essentially a copy of an operating system running on the same kernel as its host, so in this case, you don’t virtualise anything, and there are no overhead processes.
 
-![Application containers vs. system containers](https://documentation.ubuntu.com/lxd/en/latest/_images/application-vs-system-containers.svg)
+**[linuxcontainers.org](https://linuxcontainers.org/) is the umbrella project** behind Incus, LXC, LXCFS, Distrobuilder and more.
+
+The goal is to offer a **distro and vendor neutral environment** for the development of Linux container technologies. The focus is providing containers and virtual machines that run full Linux systems. While VMs supply a complete environment, system containers offer an environment as close as possible to the one you'd get from a VM, but without the overhead that comes with running a separate kernel and simulating all the hardware.
+
+**When should you use Linux containers?**
+- Anytime when you’re running Linux on Linux, you should be considering using containers instead of virtual machines.
+- For almost any use case, you could run the exact same workload in a system container and not get any of the overhead that you usually get when using virtual machines.
+- The only exception would be if you needed a specific version of the kernel different from the kernel of the host, for a specific feature of that virtual machine.
+- System containers are much easier to manage than virtual machines.
 
 
-## TODO
-https://www.redhat.com/en/topics/containers?sc_cid=70160000000x4xDAAQ
+## What is LXD?
+**LXD is a system container and a virtual machine manager** that runs on top of LXC, enhancing the experience and enabling **easier control** and maintenance. LXD is image-based and provides images for a wide number of different Linux distributions. A simple command-line tool enables you to easily manage your instances, and it is easy to integrate it with third-party orchestration and management tools. LXD can run **clusters**, it provides support for different storage backends and network types and scales easily from one instance on your laptop to a full rack in a data center.
 
+LXC:
+- Linux container runtime allowing creation of multiple isolated Linux systems (containers) on a control host using a single Linux kernel
+- Only supports containers
+- Low-level tool requiring expertise
 
-Benefits:
--offering speed, flexibility, and isolation from the underlying system
+LXD:
+- System container and virtual machine manager built on top of LXC, enabling easier management, control and integration
+- Supports container and VMs
+- Better user experience through a simple REST API
 
-## linuxcontainers.org
-
-[linuxcontainers.org](https://linuxcontainers.org/) is the umbrella project behind Incus, LXC, LXCFS, Distrobuilder and more.
-
-The goal is to offer a **distro and vendor neutral environment** for the development of Linux container technologies.
-
-Our focus is providing containers and virtual machines that run full Linux systems. While VMs supply a complete environment, system containers offer an environment as close as possible to the one you'd get from a VM, but without the overhead that comes with running a separate kernel and simulating all the hardware.
-
-- https://ubuntu.com/blog/what-are-linux-containers
 
 ## Docker vs Linux Containers
-- https://earthly.dev/blog/lxc-vs-docker/
-- https://www.upguard.com/blog/docker-vs-lxc
-- https://ubuntu.com/blog/lxd-vs-docker
-- https://www.redswitches.com/blog/lxc-vs-docker/
-- https://www.section.io/engineering-education/lxc-vs-docker-what-is-the-difference-and-why-docker-is-better/
-
-LXD utilises LXC for running system containers. LXC is the technology allowing the segmentation of your system into independent containers, whereas LXD is a daemon running on top of it allowing you to manage and operate these instances in an easy and unified way. When it comes to storage, networking, and logging, LXD supports a variety of interfaces and features that the user can control and interact with. LXD is image-based and you can utilise it to run any kind of workload, including traditional systems you would otherwise run in physical or virtual machines. Overall, functionality-wise, LXD is similar to VMWare or KVM hypervisors, but is much lighter on resources and removes the usual virtualization overhead.
-
-Docker is a containerisation platform, it can be installed on a machine (workstation or a server) and provides a variety of tools for developing and operating containers. One of those tools is containerd – a daemon-based runtime that manages the complete lifecycle of Docker containers, including overall running and monitoring of containers. Docker abstracts away storage, networking, and logging, making it easy for developers that don’t have much prior Linux knowledge. Docker was specifically designed for microservice architecture, providing a way to decompose and isolate individual processes, which can then be scaled independently from the rest of the application or system they are a part of. 
+- ✅ [Linux Containers vs Docker - What is the Difference](https://www.section.io/engineering-education/lxc-vs-docker-what-is-the-difference-and-why-docker-is-better/)
+- ✅ [Unveiling the Differences: LXC vs Docker – An In-Depth Comparison](https://www.redswitches.com/blog/lxc-vs-docker/)
+- ✅ [LXD vs Docker](https://ubuntu.com/blog/lxd-vs-docker)
+- ✅ [LXC vs Docker: Why Docker is Better in 2023](https://www.upguard.com/blog/docker-vs-lxc)
+- ✅ [LXC vs Docker: Which Container Platform Is Right for You?](https://earthly.dev/blog/lxc-vs-docker/)
 
 > Up to version 0.8, Docker was essentially based on LXC.
+
+- **Host-Machine Utilization**:
+    - Docker: utilizes application-level virtualization
+    - LXC: provides a lightweight OS-level virtualization, making LXC more efficient in resource utilization
+- **Simplicity**:
+    - Docker shines in simplicity and flexibility in design and usage. Its user-friendly interface and irregular approach through Dockerfiles make it easy for developers to create and manage containers.
+    - LXC is a low-level tool that requires expertise in Linux administration and containerization. It is not as user-friendly as Docker.
+- **Tooling**:
+    - Docker offers a rich set of commands and tools for managing containers, making it highly versatile for various use cases.
+    - LXC, while functional, may need more of the user-friendly tooling.
+- **Use Cases**:
+    - Docker Use Cases: Microservices Architecture, Continuous Integration and Continuous Deployment (CI/CD), DevOps Environments
+    - LXC Use Cases: Heavy Resource Utilization Applications, Virtual Desktop Infrastructure (VDI),  System-Level Testing

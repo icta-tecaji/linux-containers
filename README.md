@@ -1,16 +1,27 @@
-# Linux Containers course
+# Linux Containers
 
 ## Content
 
-LXC:
- - izolacija aplikaciji
- - kaj je kontejnert
- - openWRT
- - GUI za aplikaicjo
- - kako je izolirano
+### [Introduction to Linux Containers](./01_Introduction_to_Linux_Containers/README.md)
+- Containerization vs traditional virtualization
+- Introduction to Linux Containers
+- Container Definition
+- What types of containers are there?
+- Container History
+- Features to Enable Containers
+- LXC and linuxcontainers.org
+- What is LXD?
+- Docker vs Linux Containers
 
+### [Installing and Running LXC](./02_Installing_and_Running_LXC/README.md)
+- Introduction
+- Releases
+- Installation
+- LXC Default Configuration
+- Privileged LXC containers
+- Building a LXC container
+- Unprivileged LXC containers
 
-- kaj so linux bridgi
 
 ## Sources
 - [Container and virtualization tools](https://linuxcontainers.org/)
