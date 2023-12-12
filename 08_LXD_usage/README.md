@@ -1,4 +1,4 @@
-# LXD
+# LXD Usage
 
 Sources:
 - ✅ [Run system containers with LXD](https://ubuntu.com/lxd)
