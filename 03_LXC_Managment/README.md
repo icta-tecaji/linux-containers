@@ -1,33 +1,57 @@
 # LXC Managment
 
-## LXC web panel
-- https://computingforgeeks.com/how-to-install-lxc-lxc-ui-on-ubuntu/?expand_article=1
-
-Management of LXC Containers using a web panel:
-Some people find working with the command line a bit tedious, this method is just for them. By installing the web panel of LXC one can manage the containers with the help of GUI.
-
-Note: For installing the web panel you must be a root user.
-
-sudo su
-wget http://lxc-webpanel.github.io/tools/install.sh -O - | bash
-
- 
-
-The user interface can be accessed at the  Url: http:/your_ip_address:5000/ by using the user id and password which by default are admin and admin.
 
 
-Go to the site and enter the details:
-You have successfully entered the GUI panel, now you can maintain the containers from the web panel easily.
+## Autostart LXC containers
+- [lxc-autostart](https://linuxcontainers.org/lxc/manpages//man1/lxc-autostart.1.html)
 
-## Autostarting LXC containers
-LXC startup
 LXC does not have a long-running daemon. However it does have three upstart jobs.
-- /etc/init/lxc-net.conf: is an optional job which only runs if /etc/default/lxc-net specifies USE_LXC_BRIDGE (true by default). It sets up a NATed bridge for containers to use.
-- /etc/init/lxc.conf loads the lxc apparmor profiles and optionally starts any autostart containers. The autostart containers will be ignored if LXC_AUTO (true by default) is set to true in /etc/default/lxc. See the lxc-autostart manual page for more information on autostarted containers.
-- /etc/init/lxc-instance.conf is used by /etc/init/lxc.conf to autostart a container.
+- `/etc/init/lxc-net.conf`: is an optional job which only runs if /etc/default/lxc-net specifies USE_LXC_BRIDGE (true by default). It sets up a NATed bridge for containers to use.
+- `/etc/init/lxc.conf` loads the lxc apparmor profiles and optionally starts any autostart containers. The autostart containers will be ignored if LXC_AUTO (true by default) is set to true in /etc/default/lxc. See the lxc-autostart manual page for more information on autostarted containers.
+- `/etc/init/lxc-instance.conf` is used by /etc/init/lxc.conf to autostart a container.
 
-Autostart
-LXC supports marking containers to be started at system boot. Prior to Ubuntu 14.04, this was done using symbolic links under the directory /etc/lxc/auto. Starting with Ubuntu 14.04, it is done through the container configuration files. An entry
+
+**By default, LXC containers do not start after a server reboot.** LXC supports marking containers to be started at system boot. Prior to Ubuntu 14.04, this was done using symbolic links under the directory /etc/lxc/auto. Starting with Ubuntu 14.04, it is done through the container configuration files. To change that, we can use the `lxc-autostart` tool and the containers configuration file:
+1. Create the containers:
+```bash
+# Create the first container (no autostart):
+sudo lxc-create -t download \
+  -n 01-no-autostart -- \
+  --dist debian \
+  --release bookworm \
+  --arch amd64
+
+# Create the second container (privileged):
+sudo lxc-create -t download \
+  -n 02-autostart-privileged -- \
+  --dist debian \
+  --release bookworm \
+  --arch amd64
+
+# Create the third container (unprivileged):
+lxc-create -t download \
+  -n 03-autostart-unprivileged -- \
+  --dist debian \
+  --release bookworm \
+  --arch amd64
+
+# Check:
+lxc-ls --fancy
+sudo lxc-ls --fancy
+```
+
+2. Reboot the server: `sudo reboot`
+3. Check the containers status: `lxc-ls --fancy` and `sudo lxc-ls --fancy`
+
+
+
+
+
+
+Start the containers:
+- `lxc-start -n 01-no-autostart`
+- `lxc-start -n 02-autostart`
+
 
 lxc.start.auto = 1
 lxc.start.delay = 5
@@ -209,3 +233,19 @@ Exploitable system calls
 It is a core container feature that containers share a kernel with the host. Therefore if the kernel contains any exploitable system calls the container can exploit these as well. Once the container controls the kernel it can fully control any resource known to the host.
 
 In general to run a full distribution container a large number of system calls will be needed. However for application containers it may be possible to reduce the number of available system calls to only a few. Even for system containers running a full distribution security gains may be had, for instance by removing the 32-bit compatibility system calls in a 64-bit container. See the lxc.container.conf manual page for details of how to configure a container to use seccomp. By default, no seccomp policy is loaded.
+
+
+## LXC web panel
+- [LXC Web Panel](https://lxc-webpanel.github.io/install.html)
+- [LXC-Web-Panel](https://github.com/lxc-webpanel/LXC-Web-Panel)
+
+> The project is no longer maintained and is deprecated. Supported for LXC 0.7 to 0.9. You can use LXD UI instead.
+
+Some people find working with the command line a bit tedious, this method is just for them. By installing the web panel of LXC one can manage the containers with the help of GUI. Note: For installing the web panel you must be a root user.
+
+```bash
+sudo su
+wget http://lxc-webpanel.github.io/tools/install.sh -O - | bash
+```
+
+The user interface can be accessed at the  Url: `http:/your_ip_address:5000/` by using the user id and password which by default are admin and admin.
