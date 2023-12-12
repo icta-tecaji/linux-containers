@@ -1,14 +1,12 @@
 # Installing and Running LXC
 
 Sources:
-- [What's LXC?](https://linuxcontainers.org/lxc/introduction/)
-- [Github LXC](https://github.com/lxc/lxc)
-- [Install LXC and LXC UI on Ubuntu 22.04|20.04|18.04|16.04](https://computingforgeeks.com/how-to-install-lxc-lxc-ui-on-ubuntu/?expand_article=1)
-- [Introduction to security](https://linuxcontainers.org/lxc/security/)
-- [Containers - LXC](https://ubuntu.com/server/docs/containers-lxc)
-- [How to Use Linux Containers With LXC and LXD](https://www.freecodecamp.org/news/linux-containers-lxc-lxd/)
-- [How to Manage Linux Containers using LXC](https://www.geeksforgeeks.org/how-to-manage-linux-containers-using-lxc/)
-- [LXC: Linux container tools](https://developer.ibm.com/tutorials/l-lxc-containers/)
+- ✅ [What's LXC?](https://linuxcontainers.org/lxc/introduction/)
+- ✅ [Github LXC](https://github.com/lxc/lxc)
+- ✅ [Install LXC and LXC UI on Ubuntu 22.04|20.04|18.04|16.04](https://computingforgeeks.com/how-to-install-lxc-lxc-ui-on-ubuntu/?expand_article=1)
+- ✅ [Containers - LXC](https://ubuntu.com/server/docs/containers-lxc)
+- ✅ [How to Manage Linux Containers using LXC](https://www.geeksforgeeks.org/how-to-manage-linux-containers-using-lxc/)
+- ✅ [LXC: Linux container tools](https://developer.ibm.com/tutorials/l-lxc-containers/)
 
 
 ## Introduction
@@ -88,6 +86,8 @@ For LXC userspace tools to work properly in the host operating system, you must 
 ## LXC Default Configuration
 `/etc/lxc/default.conf` is the default configuration file for LXC installed using the standard Ubuntu packages. This configuration file supplies the default configuration for all containers created on the host system.
 - `cat /etc/lxc/default.conf`
+
+> For privileged use, they are found under /etc/lxc, while for unprivileged use they are under ~/.config/lxc.
 
 The networking will be set up as a virtual Ethernet connection type—that is, veth from the network bridge lxcbr0 for each container that will get created.
 
@@ -235,7 +235,7 @@ Because of that, most distribution templates simply won't work with those. Inste
 3. The last step is to create an LXC configuration file.
 ```bash
 mkdir -p ~/.config/lxc
-echo "lxc.include = /etc/lxc/default.conf" >> ~/.config/lxc/default.conf
+echo "lxc.include = /etc/lxc/default.conf" > ~/.config/lxc/default.conf
 MS_UID="$(grep "$(id -un)" /etc/subuid  | cut -d : -f 2)"
 ME_UID="$(grep "$(id -un)" /etc/subuid  | cut -d : -f 3)"
 MS_GID="$(grep "$(id -un)" /etc/subgid  | cut -d : -f 2)"
