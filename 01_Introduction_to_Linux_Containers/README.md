@@ -68,59 +68,6 @@ Container technology has existed for a long time in different forms, but it has 
 - 2013: Docker (Linux, FreeBSD, Windows)
 
 
-## Features to Enable Containers
-Containers rely on the following features in the Linux kernel to get a contained or isolated area within the host machine. This area is closely related to a virtual machine, but without the need for a hypervisor.
-- Control groups (cgroups)
-- Namespaces
-- Filesystem or rootfs
-
-### Control Groups (cgroups)
-- Google presented a new generic method to solve the resource control problem with the cgroups project in 2007.
-- Control groups allow resources to be controlled and accounted for based on process groups. 
-- The mainline Linux kernel first included a cgroups implementation in 2008, and this paved the way for LXC.
-- Cgroups provide a mechanism to aggregate sets of tasks or processes and their future children into hierarchical groups. These groups may be configured to have specialized behavior as desired.
-
-Cgroups are listed within the pseudo filesystem subsystem in the directory `/sys/fs/cgroup`, which gives an overview of all the cgroup subsystems available or mounted in
-the currently running system:
-- `ls -alh /sys/fs/cgroup`
-
-Let’s take a look at an example of the memory subsystem hierarchy of cgroups. It is available in the following location:
-- `cd /sys/fs/cgroup/memory`
-- `ls`
-
-Each of the files listed contains information on the control group for which it has been created. For example, the maximum memory usage in bytes is given by the following command (since this is the top-level hierarchy, it lists the default setting for the current host system):
-- `cat memory.max_usage_in_bytes` (that is available for use by the currently running system)
-
-The preceding value is in bytes. You can create your own cgroups within `/sys/fs/cgroup` and control each of the subsystems.
-
-### Namespaces
-- At the Ottawa Linux Symposium held in 2006, Eric W. Bierderman presented his paper “Multiple Instances of the Global Linux Namespaces”
-- This paper proposed the addition of ten namespaces to the Linux kernel. His inspiration for these additional namespaces was the existing filesystem namespace for mounts, which was introduced in 2002. 
-
-**A namespace provides an abstraction to a global system resource that will appear to the processes within the defined namespace as its own isolated instance of a specific global resource.**
-
-Namespaces are used to implement containers; they provide the required isolation between a container and the host system.
-
-Over time, different namespaces have been implemented in the Linux kernel:
-- Cgroup: `CLONE_NEWCGROUP` - Cgroup root directory
-- IPC: `CLONE_NEWIPC` - System V IPC, POSIX message queues
-- Network: `CLONE_NEWNET` - Network devices, stacks, ports, etc.
-- Mount: `CLONE_NEWNS`- Mount points
-- PID: `CLONE_NEWPID`- Process IDs
-- User: `CLONE_NEWUSER` - User and group IDs
-- UTS: `CLONE_NEWUTS` - Hostname and NIS domain name
-
-### Filesystem or rootfs
-
-The next component needed for a container is the **disk image, which provides the root filesystem (rootfs) for the container**. 
-
-The rootfs consists of a set of files, similar in structure to the filesystem mounted at root on any GNU/Linux-based machine. 
-
-The size of rootfs is smaller than a typical OS disk image, since it does not contain the kernel. **The container shares the same kernel as the host machine.**
-
-A rootfs can further be reduced in size by making it contain just the application and configuring it to share the rootfs of the host machine. Using copy-on-write (COW) techniques, a single reduced read-only disk image may be shared between multiple containers.
-
-
 ## LXC and linuxcontainers.org
 
 Linux containers, also known as LXC, was the first implementation of system containers that was entirely based on mainline Linux features. This means that you could take a completely clean upstream kernel, or the kernel as distributed by any Linux distribution, and use that to create containers on Linux. LXC itself is a low-level tool that can create both system containers and application containers.
@@ -174,3 +121,58 @@ LXD:
 - **Use Cases**:
     - Docker Use Cases: Microservices Architecture, Continuous Integration and Continuous Deployment (CI/CD), DevOps Environments
     - LXC Use Cases: Heavy Resource Utilization Applications, Virtual Desktop Infrastructure (VDI),  System-Level Testing
+
+
+## Features to Enable Containers
+Containers rely on the following features in the Linux kernel to get a contained or isolated area within the host machine. This area is closely related to a virtual machine, but without the need for a hypervisor.
+- Control groups (cgroups)
+- Namespaces
+- Filesystem or rootfs
+
+### Control Groups (cgroups)
+- Google presented a new generic method to solve the resource control problem with the cgroups project in 2007.
+- Control groups allow resources to be controlled and accounted for based on process groups. 
+- The mainline Linux kernel first included a cgroups implementation in 2008, and this paved the way for LXC.
+- Cgroups provide a mechanism to aggregate sets of tasks or processes and their future children into hierarchical groups. These groups may be configured to have specialized behavior as desired.
+
+Cgroups are listed within the pseudo filesystem subsystem in the directory `/sys/fs/cgroup`, which gives an overview of all the cgroup subsystems available or mounted in
+the currently running system:
+- `ls -alh /sys/fs/cgroup`
+
+Let’s take a look at an example of the memory subsystem hierarchy of cgroups. It is available in the following location:
+- `cd /sys/fs/cgroup/memory`
+- `ls`
+
+Each of the files listed contains information on the control group for which it has been created. For example, the maximum memory usage in bytes is given by the following command (since this is the top-level hierarchy, it lists the default setting for the current host system):
+- `cat memory.max_usage_in_bytes` (that is available for use by the currently running system)
+
+The preceding value is in bytes. You can create your own cgroups within `/sys/fs/cgroup` and control each of the subsystems.
+
+### Namespaces
+- At the Ottawa Linux Symposium held in 2006, Eric W. Bierderman presented his paper “Multiple Instances of the Global Linux Namespaces”
+- This paper proposed the addition of ten namespaces to the Linux kernel. His inspiration for these additional namespaces was the existing filesystem namespace for mounts, which was introduced in 2002. 
+
+**A namespace provides an abstraction to a global system resource that will appear to the processes within the defined namespace as its own isolated instance of a specific global resource.**
+
+Namespaces are used to implement containers; they provide the required isolation between a container and the host system.
+
+Over time, different namespaces have been implemented in the Linux kernel:
+- Cgroup: `CLONE_NEWCGROUP` - Cgroup root directory
+- IPC: `CLONE_NEWIPC` - System V IPC, POSIX message queues
+- Network: `CLONE_NEWNET` - Network devices, stacks, ports, etc.
+- Mount: `CLONE_NEWNS`- Mount points
+- PID: `CLONE_NEWPID`- Process IDs
+- User: `CLONE_NEWUSER` - User and group IDs
+- UTS: `CLONE_NEWUTS` - Hostname and NIS domain name
+
+### Filesystem or rootfs
+
+The next component needed for a container is the **disk image, which provides the root filesystem (rootfs) for the container**. 
+
+The rootfs consists of a set of files, similar in structure to the filesystem mounted at root on any GNU/Linux-based machine. 
+
+The size of rootfs is smaller than a typical OS disk image, since it does not contain the kernel. **The container shares the same kernel as the host machine.**
+
+A rootfs can further be reduced in size by making it contain just the application and configuring it to share the rootfs of the host machine. Using copy-on-write (COW) techniques, a single reduced read-only disk image may be shared between multiple containers.
+
+

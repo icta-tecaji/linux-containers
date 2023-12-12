@@ -8,10 +8,10 @@
 - Container Definition
 - What types of containers are there?
 - Container History
-- Features to Enable Containers
 - LXC and linuxcontainers.org
 - What is LXD?
 - Docker vs Linux Containers
+- Features to Enable Containers
 
 ### [Installing and Running LXC](./02_Installing_and_Running_LXC/README.md)
 - Introduction
