@@ -179,10 +179,50 @@ sudo lxc-stop -n container-test
 sudo lxc-destroy -n container-test
 ```
 
+
 ## Limiting container resource usage
 
+LXC comes with tools to limit container resources. The container must be started with the `lxc-start` command for the limits to be applied.
 
+```bash
+# Create a container:
+sudo lxc-create -t download \
+  -n container-test -- \
+  --dist debian \
+  --release bookworm \
+  --arch amd64
 
+sudo lxc-start -n container-test
+sudo lxc-ls --fancy
+
+# set up the available memory for a container to 512 MB
+sudo lxc-cgroup -n container-test memory.limit_in_bytes 536870912
+
+# check the memory limit:
+sudo lxc-attach --name container-test -- free -h
+
+# Changing the value only requires running the same command again. 
+# Let's change the available memory to 256 MB
+sudo lxc-cgroup -n container-test memory.limit_in_bytes 268435456
+
+# check the memory limit:
+sudo lxc-attach --name container-test -- free -h
+
+# We can also pin a CPU core to a container
+sudo lxc-attach --name container-test -- cat /proc/cpuinfo | grep processor
+
+# Check the number of cores available on the host:
+cat /proc/cpuinfo | grep processor
+
+# Pin the container to the second core:
+sudo lxc-cgroup -n container-test cpuset.cpus 1
+sudo lxc-attach --name container-test -- cat /proc/cpuinfo | grep processor
+```
+
+To make changes to persist server reboots, we need to add them to the configuration file of the container:
+- `echo "lxc.cgroup.memory.limit_in_bytes = 536870912" | sudo tee -a  /var/lib/lxc/container-test/config`
+
+Setting various other cgroup parameters is done in a similar way.
 
 
 ## Cloning

@@ -26,6 +26,7 @@
 - Autostart LXC containers
 - Freezing a running container
 - LXC Lifecycle management hooks
+- Limiting container resource usage
 
 ### [LXC Storage](./04_LXC_Storage/README.md)
 
