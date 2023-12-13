@@ -4,7 +4,7 @@
 ## Python API
 - https://github.com/lxc/python3-lxc
 - https://linuxcontainers.org/lxc/documentation/#python
-
+- https://stgraber.org/2014/02/05/lxc-1-0-scripting-with-the-api/
 
 XC API
 Most of the LXC functionality can now be accessed through an API exported by liblxc for which bindings are available in several languages, including Python, lua, ruby, and go.

@@ -22,11 +22,19 @@
 - Building a LXC container
 - Unprivileged LXC containers
 
-### [LXC Managment](./03_LXC_Managment/README.md)
+### [LXC Management](./03_LXC_Management/README.md)
+- Autostart LXC containers
+- Freezing a running container
+- LXC Lifecycle management hooks
+- Limiting container resource usage
+- Troubleshooting
+- Security
 
-### [LXC Storage](./04_LXC_Storage/README.md)
+### [LXC Networking](./04_LXC_Networking/README.md)
 
-### [LXC Networking](./05_LXC_Networking/README.md)
+
+### [LXC Storage](./05_LXC_Storage/README.md)
+
 
 ### [LXC Integration with Python](./06_LXC_Integration_with_Python/README.md)
 

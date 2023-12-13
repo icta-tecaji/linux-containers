@@ -4,6 +4,11 @@
 
 
 ## Security
+
+- https://documentation.ubuntu.com/lxd/en/latest/explanation/projects/
+- https://documentation.ubuntu.com/lxd/en/latest/explanation/security/
+
+
 Consider the following aspects to ensure that your LXD installation is secure:
 
 Keep your operating system up-to-date and install all available security patches.
