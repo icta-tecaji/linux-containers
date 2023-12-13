@@ -1,17 +1,24 @@
-# LXC Managment
-
-
+# LXC Management
 
 ## Autostart LXC containers
 - [lxc-autostart](https://linuxcontainers.org/lxc/manpages//man1/lxc-autostart.1.html)
+- [Auto-start](https://stgraber.org/2013/12/21/lxc-1-0-your-second-container/)
 
-LXC does not have a long-running daemon. However it does have three upstart jobs.
-- `/etc/init/lxc-net.conf`: is an optional job which only runs if /etc/default/lxc-net specifies USE_LXC_BRIDGE (true by default). It sets up a NATed bridge for containers to use.
-- `/etc/init/lxc.conf` loads the lxc apparmor profiles and optionally starts any autostart containers. The autostart containers will be ignored if LXC_AUTO (true by default) is set to true in /etc/default/lxc. See the lxc-autostart manual page for more information on autostarted containers.
-- `/etc/init/lxc-instance.conf` is used by /etc/init/lxc.conf to autostart a container.
+LXC does not have a long-running daemon. 
 
+**By default, LXC containers do not start after a server reboot.** LXC supports marking containers to be started at system boot. Prior to Ubuntu 14.04, this was done using symbolic links under the directory /etc/lxc/auto. Starting with Ubuntu 14.04, it is done through the container configuration files. 
 
-**By default, LXC containers do not start after a server reboot.** LXC supports marking containers to be started at system boot. Prior to Ubuntu 14.04, this was done using symbolic links under the directory /etc/lxc/auto. Starting with Ubuntu 14.04, it is done through the container configuration files. To change that, we can use the `lxc-autostart` tool and the containers configuration file:
+To change that, we can use the `lxc-autostart` tool and the containers configuration file. Each container has a configuration file typically under `/var/lib/lxc/<container name>/config` for privileged containers and `$HOME/.local/share/lxc/<container name>/config` for unprivileged containers.
+
+The startup related values that are available are:
+- `lxc.start.auto` = 0 (disabled) or 1 (enabled)
+- `lxc.start.delay` = 0 (delay in second to wait after starting the container)
+- `lxc.start.order` = 0 (priority of the container, higher value means starts earlier)
+- `lxc.group` = group1,group2,group3,… (groups the container is a member of)
+
+`lxc-autostart` processes containers with lxc.start.auto set. It **lets the user start, shutdown, kill, restart containers in the right order, waiting the right time.** Supports filtering by lxc.group or just run against all defined containers. It can also be used by external tools in list mode where no action will be performed and the list of affected containers (and if relevant, delays) will be shown. The [-r], [-s] and [-k] options specify the action to perform. If none is specified, then the containers will be started.
+
+When your machine starts, an init script will ask `lxc-autostart` to start all containers of a given group (by default, all containers which aren’t in any) in the right order and waiting the specified time between them.
 1. Create the containers:
 ```bash
 # Create the first container (no autostart):
@@ -21,41 +28,70 @@ sudo lxc-create -t download \
   --release bookworm \
   --arch amd64
 
-# Create the second container (privileged):
+# Create the second container (autostart):
 sudo lxc-create -t download \
   -n 02-autostart-privileged -- \
   --dist debian \
   --release bookworm \
   --arch amd64
 
-# Create the third container (unprivileged):
-lxc-create -t download \
-  -n 03-autostart-unprivileged -- \
-  --dist debian \
-  --release bookworm \
-  --arch amd64
+# Check (autostart is 0):
+sudo lxc-ls --fancy
 
-# Check:
-lxc-ls --fancy
+# Add the autostart option to the containers configuration files:
+sudo su
+echo "lxc.start.auto = 1" >> /var/lib/lxc/02-autostart-privileged/config
+exit
+
+# Check (autostart is 1 in the configuration files for the selected containers):
+sudo lxc-ls --fancy
+
+# List all containers that are configured to start automatically:
+sudo lxc-autostart --list
+
+# Now we can use the lxc-autostart command again to start all containers
+#configured to autostart
+sudo lxc-autostart -a
+sudo lxc-start -n 01-no-autostart
+
+# Check (autostart is 0):
 sudo lxc-ls --fancy
 ```
+> Unprivileged containers can’t be started at boot time as they require additional setup to be done by the user. [Guide](https://bobcares.com/blog/lxc-autostart-unprivileged-containers/)
 
 2. Reboot the server: `sudo reboot`
-3. Check the containers status: `lxc-ls --fancy` and `sudo lxc-ls --fancy`
+3. Check the containers status: `sudo lxc-ls --fancy` (the autostart container is running)
+4. Stop and destroy the containers:
+```bash
+sudo lxc-stop -n 02-autostart-privileged
+sudo lxc-destroy -n 01-no-autostart
+```
 
+Two other useful autostart configuration parameters are adding a delay to the
+start, and defining a group in which multiple containers can start as a single unit.
+```bash
+sudo su
+echo "lxc.start.delay = 5" >> /var/lib/lxc/02-autostart-privileged/config
+echo "lxc.group = high_priority" >> /var/lib/lxc/02-autostart-privileged/config
+cat /var/lib/lxc/02-autostart-privileged/config
+exit
 
+sudo lxc-autostart --list # Notice that no containers showed
 
+# This is because our container now belongs to an autostart group. Let's specify it:
+sudo lxc-autostart --list --group high_priority
 
+# Start all containers belonging to a given autostart group
+sudo lxc-autostart --group high_priority
+sudo lxc-ls --fancy
 
+# Stop all containers belonging to a given autostart group
+sudo lxc-autostart --group high_priority -s
+sudo lxc-destroy -n 02-autostart-privileged
+```
 
-Start the containers:
-- `lxc-start -n 01-no-autostart`
-- `lxc-start -n 02-autostart`
-
-
-lxc.start.auto = 1
-lxc.start.delay = 5
-would mean that the container should be started at boot, and the system should wait 5 seconds before starting the next container. LXC also supports ordering and grouping of containers, as well as reboot and shutdown by autostart groups. See the manual pages for lxc-autostart and lxc.container.conf for more information.
+For lxc-autostart **to automatically start containers after a server reboot, it first
+needs to be started.**
 
 
 ## LXC Lifecycle management hooks

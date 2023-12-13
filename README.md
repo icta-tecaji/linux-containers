@@ -22,7 +22,8 @@
 - Building a LXC container
 - Unprivileged LXC containers
 
-### [LXC Managment](./03_LXC_Managment/README.md)
+### [LXC Management](./03_LXC_Management/README.md)
+- Autostart LXC containers
 
 ### [LXC Storage](./04_LXC_Storage/README.md)
 
