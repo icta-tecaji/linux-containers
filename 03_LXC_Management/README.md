@@ -253,93 +253,28 @@ sudo rm debug.out
 This will cause lxc to log at the debug verbose level and to output log information to a file called `debug.out`. If the file debug.out already exists, the new log information will be appended.
 
 
-# Security
-- https://stgraber.org/2014/01/01/lxc-1-0-security-features/
+## Security
 - [Introduction to security](https://linuxcontainers.org/lxc/security/)
-- https://linuxcontainers.org/lxc/security/#cgroup-limits
-- https://documentation.ubuntu.com/lxd/en/latest/explanation/projects/
-- https://documentation.ubuntu.com/lxd/en/latest/explanation/security/
+- [Security features](https://stgraber.org/2014/01/01/lxc-1-0-security-features/)
+- [Potential DoS attacks](https://linuxcontainers.org/lxc/security/#potential-dos-attacks)
 
-Apparmor
-LXC ships with a default Apparmor profile intended to protect the host from accidental misuses of privilege inside the container. For instance, the container will not be able to write to /proc/sysrq-trigger or to most /sys files.
+### Potential DoS attacks
+LXC doesn't pretend to prevent DoS attacks by default. When running multiple untrusted containers or when allowing untrusted users to run containers, one should keep a few things in mind and update their configuration accordingly:
+- **Cgroup limits**:
+  - LXC inherits cgroup limits from its parent. As a result, a user in a container can reasonably easily DoS the host by running a fork bomb, by using all the system's memory or creating network interfaces until the kernel runs out of memory.
+  - This can be mitigated by either setting the relevant lxc.cgroup configuration entries (memory, cpu and pids) or by making sure that the parent user is placed in appropriately configured cgroups at login time.
+  - As with cgroups, the parent's limit is inherited so unprivileged containers cannot have ulimits set to values higher than their parent.
+- **Shared network bridges**:
+  - LXC sets up basic level 2 connectivity for its containers. As a convenience it also provides one default bridge on the system.
+  - As a container connected to a bridge can transmit any level 2 traffic that it wishes, it can effectively do MAC or IP spoofing on the bridge.
+  - When running untrusted containers or when allowing untrusted users to run containers, one should ideally create one bridge per user or per group of untrusted containers and configure `/etc/lxc/lxc-usernet` such that users may only use the bridges that they have been allocated.
+- **Kernel**:
+  - It is a core container feature that containers share a kernel with the host. Therefore if the kernel contains any exploitable system calls the container can exploit these as well. 
+  - Once the container controls the kernel it can fully control any resource known to the host.
 
-The usr.bin.lxc-start profile is entered by running lxc-start. This profile mainly prevents lxc-start from mounting new filesystems outside of the container’s root filesystem. Before executing the container’s init, LXC requests a switch to the container’s profile. By default, this profile is the lxc-container-default policy which is defined in /etc/apparmor.d/lxc/lxc-default. This profile prevents the container from accessing many dangerous paths, and from mounting most filesystems.
+### Security features
 
-Programs in a container cannot be further confined - for instance, MySQL runs under the container profile (protecting the host) but will not be able to enter the MySQL profile (to protect the container).
-
-lxc-execute does not enter an Apparmor profile, but the container it spawns will be confined.
-
-Customizing container policies
-If you find that lxc-start is failing due to a legitimate access which is being denied by its Apparmor policy, you can disable the lxc-start profile by doing:
-
-sudo apparmor_parser -R /etc/apparmor.d/usr.bin.lxc-start
-sudo ln -s /etc/apparmor.d/usr.bin.lxc-start /etc/apparmor.d/disabled/
-This will make lxc-start run unconfined, but continue to confine the container itself. If you also wish to disable confinement of the container, then in addition to disabling the usr.bin.lxc-start profile, you must add:
-
-lxc.aa_profile = unconfined
-to the container’s configuration file.
-
-LXC ships with a few alternate policies for containers. If you wish to run containers inside containers (nesting), then you can use the lxc-container-default-with-nesting profile by adding the following line to the container configuration file
-
-lxc.aa_profile = lxc-container-default-with-nesting
-If you wish to use libvirt inside containers, then you will need to edit that policy (which is defined in /etc/apparmor.d/lxc/lxc-default-with-nesting) by uncommenting the following line:
-
-mount fstype=cgroup -> /sys/fs/cgroup/**,
-and re-load the policy.
-
-Note that the nesting policy with privileged containers is far less safe than the default policy, as it allows containers to re-mount /sys and /proc in nonstandard locations, bypassing apparmor protections. Unprivileged containers do not have this drawback since the container root cannot write to root-owned proc and sys files.
-
-Another profile shipped with lxc allows containers to mount block filesystem types like ext4. This can be useful in some cases like maas provisioning, but is deemed generally unsafe since the superblock handlers in the kernel have not been audited for safe handling of untrusted input.
-
-If you need to run a container in a custom profile, you can create a new profile under /etc/apparmor.d/lxc/. Its name must start with lxc- in order for lxc-start to be allowed to transition to that profile. The lxc-default profile includes the re-usable abstractions file /etc/apparmor.d/abstractions/lxc/container-base. An easy way to start a new profile therefore is to do the same, then add extra permissions at the bottom of your policy.
-
-After creating the policy, load it using:
-
-sudo apparmor_parser -r /etc/apparmor.d/lxc-containers
-The profile will automatically be loaded after a reboot, because it is sourced by the file /etc/apparmor.d/lxc-containers. Finally, to make container CN use this new lxc-CN-profile, add the following line to its configuration file:
-
-lxc.aa_profile = lxc-CN-profile
-Control Groups
-Control groups (cgroups) are a kernel feature providing hierarchical task grouping and per-cgroup resource accounting and limits. They are used in containers to limit block and character device access and to freeze (suspend) containers. They can be further used to limit memory use and block i/o, guarantee minimum cpu shares, and to lock containers to specific cpus.
-
-By default, a privileged container CN will be assigned to a cgroup called /lxc/CN. In the case of name conflicts (which can occur when using custom lxcpaths) a suffix “-n”, where n is an integer starting at 0, will be appended to the cgroup name.
-
-By default, a privileged container CN will be assigned to a cgroup called CN under the cgroup of the task which started the container, for instance /usr/1000.user/1.session/CN. The container root will be given group ownership of the directory (but not all files) so that it is allowed to create new child cgroups.
-
-As of Ubuntu 14.04, LXC uses the cgroup manager (cgmanager) to administer cgroups. The cgroup manager receives D-Bus requests over the Unix socket /sys/fs/cgroup/cgmanager/sock. To facilitate safe nested containers, the line
-
-lxc.mount.auto = cgroup
-can be added to the container configuration causing the /sys/fs/cgroup/cgmanager directory to be bind-mounted into the container. The container in turn should start the cgroup management proxy (done by default if the cgmanager package is installed in the container) which will move the /sys/fs/cgroup/cgmanager directory to /sys/fs/cgroup/cgmanager.lower, then start listening for requests to proxy on its own socket /sys/fs/cgroup/cgmanager/sock. The host cgmanager will ensure that nested containers cannot escape their assigned cgroups or make requests for which they are not authorized.
-
-### Security
-A namespace maps ids to resources. By not providing a container any id with which to reference a resource, the resource can be protected. This is the basis of some of the security afforded to container users. For instance, IPC namespaces are completely isolated. Other namespaces, however, have various leaks which allow privilege to be inappropriately exerted from a container into another container or to the host.
-
-By default, LXC containers are started under a Apparmor policy to restrict some actions. The details of AppArmor integration with lxc are in section Apparmor. Unprivileged containers go further by mapping root in the container to an unprivileged host UID. This prevents access to /proc and /sys files representing host resources, as well as any other files owned by root on the host.
-
-Exploitable system calls
-It is a core container feature that containers share a kernel with the host. Therefore if the kernel contains any exploitable system calls the container can exploit these as well. Once the container controls the kernel it can fully control any resource known to the host.
-
-In general to run a full distribution container a large number of system calls will be needed. However for application containers it may be possible to reduce the number of available system calls to only a few. Even for system containers running a full distribution security gains may be had, for instance by removing the 32-bit compatibility system calls in a 64-bit container. See the lxc.container.conf manual page for details of how to configure a container to use seccomp. By default, no seccomp policy is loaded.
-
-## Running foreign architectures
-By default LXC will only let you run containers of one of the architectures supported by the host. That makes sense since after all, your CPU doesn’t know what to do with anything else.
-
-Except that we have this convenient package called “qemu-user-static” which contains a whole bunch of emulators for quite a few interesting architectures. The most common and useful of those is qemu-arm-static which will let you run most armv7 binaries directly on x86.
-
-The “ubuntu” template knows how to make use of qemu-user-static, so you can simply check that you have the “qemu-user-static” package installed, then run:
-
-sudo lxc-create -t ubuntu -n p3 -- -a armhf
-After a rather long bootstrap, you’ll get a new p3 container which will be mostly running Ubuntu armhf. I’m saying mostly because the qemu emulation comes with a few limitations, the biggest of which is that any piece of software using the ptrace() syscall will fail and so will anything using netlink. As a result, LXC will install the host architecture version of upstart and a few of the networking tools so that the containers can boot properly.
-
-stgraber@castiana:~$ file /bin/ls
-/bin/ls: ELF 64-bit LSB  executable, x86-64, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.24, """BuildID[sha1]""" =e50e0a5dadb8a7f4eaa2fd715cacb9842e157dc7, stripped
-stgraber@castiana:~$ sudo lxc-start -n p3 -d
-stgraber@castiana:~$ sudo lxc-attach -n p3
-root@p3:/# file /bin/ls
-/bin/ls: ELF 32-bit LSB  executable, ARM, EABI5 version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.32, """BuildID[sha1]""" =88ff013a8fd9389747fb1fea1c898547fb0f650a, stripped
-root@p3:/# exit
-stgraber@castiana:~$ sudo lxc-stop -n p3
-stgraber@castiana:~$
+By default, LXC containers are started under a Apparmor policy to restrict some actions. The details of AppArmor integration with lxc are in section Apparmor. Unprivileged containers go further by mapping root in the container to an unprivileged host UID. This prevents access to `/proc` and `/sys` files representing host resources, as well as any other files owned by root on the host.
 
 
 ## LXC web panel

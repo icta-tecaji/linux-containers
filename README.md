@@ -28,6 +28,7 @@
 - LXC Lifecycle management hooks
 - Limiting container resource usage
 - Troubleshooting
+- Security
 
 ### [LXC Networking](./04_LXC_Networking/README.md)
 
