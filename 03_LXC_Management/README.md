@@ -67,8 +67,7 @@ sudo lxc-stop -n 02-autostart-privileged
 sudo lxc-destroy -n 01-no-autostart
 ```
 
-Two other useful autostart configuration parameters are adding a delay to the
-start, and defining a group in which multiple containers can start as a single unit.
+Two other useful autostart configuration parameters are adding a delay to the start, and defining a group in which multiple containers can start as a single unit.
 ```bash
 sudo su
 echo "lxc.start.delay = 5" >> /var/lib/lxc/02-autostart-privileged/config
@@ -94,6 +93,40 @@ For lxc-autostart **to automatically start containers after a server reboot, it 
 needs to be started.**
 
 
+## Freezing a running container
+LXC takes advantage of the freezer cgroup to freeze all the processes running inside a container. The processes will be in a blocked state until thawed. Freezing a container can be useful in cases where the system load is high and you want to free some resources without actually stopping the container and preserving its running state.
+
+That very simply freezes all the processes in the container so they won’t get any time allocated by the scheduler. However **the processes will still exist and will still use whatever memory they used to**.
+```bash
+# Create a container:
+sudo lxc-create -t download \
+  -n container-test -- \
+  --dist debian \
+  --release bookworm \
+  --arch amd64
+
+# Start the container:
+sudo lxc-start -n container-test
+sudo lxc-ls --fancy
+
+# Run in second terminal:
+sudo lxc-monitor --name container-test
+
+# Freeze the container:
+sudo lxc-freeze -n container-test
+sudo lxc-ls --fancy
+
+# Unfreeze the container:
+sudo lxc-unfreeze --name container-test
+sudo lxc-ls --fancy
+```
+
+
+
+
+
+
+
 ## LXC Lifecycle management hooks
 Beginning with Ubuntu 12.10, it is possible to define hooks to be executed at specific points in a container’s lifetime:
 
@@ -106,7 +139,7 @@ If any hook returns an error, the container’s run will be aborted. Any post-st
 
 Please see the lxc.container.conf(5) manual page for the configuration file format with which to specify hooks. Some sample hooks are shipped with the lxc package to serve as an example of how to write and use such hooks.
 
-## Freezing a running container
+
 
 ## Limiting container resource usage
 
