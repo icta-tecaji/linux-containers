@@ -19,6 +19,47 @@ Local access to LXD through the Unix socket always grants full access to LXD. Th
 
 Therefore, you should only give such access to users who you'd trust with root access to your system.
 
+<!-- TODO -->
+LXC (Linux Containers) is a powerful technology for creating and managing containers, which are lightweight, isolated environments for running applications. However, like any technology that involves isolation and resource sharing, security is a crucial consideration. Here's an overview of LXC's security model and some best practices:
+
+LXC Security Model:
+Namespaces:
+LXC relies heavily on Linux namespaces for isolation. Namespaces ensure that containers have their own isolated view of the system, including processes, network interfaces, mounts, and more.
+Control Groups (cgroups):
+cgroups are used to limit and isolate resource usage (CPU, memory, I/O, etc.) of containers. This prevents a single container from exhausting the host's resources and affecting other containers.
+Capabilities:
+Linux capabilities partition the privileges traditionally associated with the superuser (root), allowing for more fine-grained control over what containers can do.
+Mandatory Access Control (MAC):
+Technologies like SELinux and AppArmor are used to restrict the actions a container can perform, adding an additional layer of security.
+Filesystem Isolation:
+Filesystem isolation (using chroot and mount namespaces) ensures that containers cannot access each other's files or the host's files unless explicitly allowed.
+Security Concerns and Best Practices:
+Running Containers as Non-Root:
+Whenever possible, run containers as non-root users to limit the potential damage if the container is compromised.
+Container Images Security:
+Use trusted sources for container images and regularly update them to ensure they include the latest security patches.
+Network Isolation and Firewalling:
+Configure network namespaces and use firewalls (like iptables or nftables) to control network traffic to and from containers.
+Regular Updates and Patching:
+Regularly update the host system and the container environment to ensure you have the latest security fixes.
+Restricting Capabilities:
+Limit the Linux capabilities that are available to containers to reduce the risk of privilege escalation attacks.
+Use MAC Policies:
+Employ Mandatory Access Control systems like SELinux or AppArmor to enforce security policies on containers.
+Resource Limits:
+Set appropriate resource limits using cgroups to prevent Denial of Service (DoS) attacks from over-consuming system resources.
+Isolate Sensitive Workloads:
+For highly sensitive workloads, consider stronger isolation solutions like virtual machines or dedicated hosts.
+Security Monitoring and Auditing:
+Implement security monitoring and auditing tools to detect suspicious activities within containers or on the host system.
+Understanding Shared Kernel Model:
+Remember that all containers on a host share the same kernel. A vulnerability in the kernel can potentially impact all containers.
+LXC vs. Other Container Technologies:
+Compared to Docker or Kubernetes, LXC is often seen as providing a lower-level interface to containers, which can offer more control but might require more effort to secure.
+Docker, for instance, comes with its own set of security enhancements and defaults that are tailored to its way of container management.
+In summary, while LXC provides robust tools for isolating and managing containers, ensuring security in an LXC-based environment requires a comprehensive approach, including proper configuration, regular maintenance, and adherence to security best practices. As with any technology, staying informed about potential vulnerabilities and updates is crucial for maintaining a secure environment.
+
+
 ## Running Docker in LXD
 While LXD and Docker often get compared, they shouldn’t be seen as competing technologies. As illustrated above, they each have their own purpose and place in the digital world. In fact, even running Docker using LXD is possible and suitable in certain circumstances.
 

@@ -124,46 +124,185 @@ LXD:
 
 
 ## Features to Enable Containers
-Containers rely on the following features in the Linux kernel to get a contained or isolated area within the host machine. This area is closely related to a virtual machine, but without the need for a hypervisor.
-- Control groups (cgroups)
-- Namespaces
-- Filesystem or rootfs
+Containers rely on the following core features of the Linux kernel to form a contained or isolated environment within the host machine. This area is similar to a virtual machine, but operates with the need for a hypervisor (no virtualization or emulation of hardware resources). Instead the resources are shared with containers in a controlled manner.
+
+- **Control groups (cgroups)**
+    - "resource management"
+- **Namespaces (ns)**
+    - "resource isolation"
+- **Filesystem (rootfs)**
+    - "guest system rootfs"
 
 ### Control Groups (cgroups)
-- Google presented a new generic method to solve the resource control problem with the cgroups project in 2007.
-- Control groups allow resources to be controlled and accounted for based on process groups. 
-- The mainline Linux kernel first included a cgroups implementation in 2008, and this paved the way for LXC.
-- Cgroups provide a mechanism to aggregate sets of tasks or processes and their future children into hierarchical groups. These groups may be configured to have specialized behavior as desired.
 
-Cgroups are listed within the pseudo filesystem subsystem in the directory `/sys/fs/cgroup`, which gives an overview of all the cgroup subsystems available or mounted in
-the currently running system:
-- `ls -alh /sys/fs/cgroup`
+`cgroups`, short for control groups, is a feature of the Linux kernel that allows you to allocate, prioritize, deny, manage, and monitor system resources like CPU time, system memory, network bandwidth (using cgroup networking extensions), or combinations of these resources for a group of processes running on a system. It's a powerful tool for *resource management* and is widely used in various scenarios, especially in containerization and virtualization. 
 
-Let’s take a look at an example of the memory subsystem hierarchy of cgroups. It is available in the following location:
-- `cd /sys/fs/cgroup/memory`
-- `ls`
+You can group processes into cgroups based on various criteria like user, service, or task. This grouping mechanism can isolate these processes from others, making it useful for system stability and security. In virtualization and containerization (like Docker and LXC), cgroups provide a way to isolate and limit resources used by containers, ensuring that they don’t monopolize system resources. They help in managing and optimizing the performance of applications by controlling the allocation of resources.
 
-Each of the files listed contains information on the control group for which it has been created. For example, the maximum memory usage in bytes is given by the following command (since this is the top-level hierarchy, it lists the default setting for the current host system):
-- `cat memory.max_usage_in_bytes` (that is available for use by the currently running system)
+> Brief implementation history:
+> - Google presented a new generic method to solve the resource control problem with the cgroups project in 2007.
+> - The mainline Linux kernel first included a cgroups implementation in 2008, and this paved the way for LXC.
 
-The preceding value is in bytes. You can create your own cgroups within `/sys/fs/cgroup` and control each of the subsystems.
+**Types of Resources Controlled by cgroups:**
+
+- CPU: Limiting CPU usage, setting CPU priorities.
+- Memory: Limiting memory usage, managing out-of-memory priorities.
+- Block I/O: Limiting access to I/O devices, prioritizing I/O access.
+- Network: Although traditionally not part of cgroups, there are extensions and tools that integrate network bandwidth management into the cgroups framework.
+
+**Operation Principles:**
+
+Cgroups provide a mechanism to aggregate sets of tasks or processes and their future children into hierarchical groups. These groups may be configured to have specialized behavior as desired. Under the hood cgroups make use of various kernel features to manage resources, e.g.:
+
+- For CPU resources, cgroups integrate with the Linux scheduler to allocate CPU time among different groups according to configured limits and priorities.
+- For memory, cgroups interact with the kernel's memory manager to track and limit the memory usage of processes in a group.
+
+**Interacting with cgroups:**
+
+As a part of the Linux kernel, cgroups require no additional software to work on a Linux system (interaction is possible using the filsystem interface, by manipulating files in `/sys/fs/cgroup/`), though userland tools are used to interact with them. For cgroups v2 the `cgroup-tools` (a.k.a `libcgroup` or `cgutils`) is one of the recommended packages.
+
+The `cgroup-tools` package provides several management utilities, including:
+- `cgcreate`: This tool is used to create a new control group using the desired subsystems.
+- `cgset`: This tool is used to set resource limits on a control group. 
+- `cgclassify`: This tool is used to move running processes into a control group.
+- `cgexec`: This tool is used to start a process directly in a specified control group.
+- `cgget`: This tool displays the parameters and their values for a specified control group.
+- `cgdelete`: This tool is used to remove a control group.
+
+**Example:** creating a new cgroup, setting its resource limits and migrating a running process
+```bash
+sudo cgcreate -g cpu,memory:/mygroup # subsystems and name
+sudo cgset -r memory.max=500M mygroup # memory limit
+sudo cgclassify -g cpu,memory:/mygroup 1234 # PID
+```
+
+You may also interact with cgroups directly on the filesystem. Following a key design philosophy in UNIX, where "everything is a file", cgroups are listed within the pseudo-filesystem subsystem in the directory `/sys/fs/cgroup`, which gives an overview of all the cgroup subsystems available or mounted in the currently running system:
+
+`ls -lh /sys/fs/cgroup`
+
+```bash
+-r--r--r--  1 root root 0 Dec 12 16:38 cgroup.controllers
+-rw-r--r--  1 root root 0 Dec 12 16:38 cgroup.max.depth
+-rw-r--r--  1 root root 0 Dec 12 16:38 cgroup.max.descendants
+-rw-r--r--  1 root root 0 Dec 12 16:38 cgroup.pressure
+-rw-r--r--  1 root root 0 Dec 12 16:38 cgroup.procs
+-r--r--r--  1 root root 0 Dec 12 16:38 cgroup.stat
+-rw-r--r--  1 root root 0 Dec 12 16:38 cgroup.subtree_control
+-rw-r--r--  1 root root 0 Dec 12 16:38 cgroup.threads
+-rw-r--r--  1 root root 0 Dec 12 16:38 cpu.pressure
+-r--r--r--  1 root root 0 Dec 12 16:38 cpuset.cpus.effective
+-r--r--r--  1 root root 0 Dec 12 16:38 cpuset.mems.effective
+-r--r--r--  1 root root 0 Dec 12 16:38 cpu.stat
+drwxr-xr-x  2 root root 0 Dec 13 15:08 dev-hugepages.mount
+drwxr-xr-x  2 root root 0 Dec 13 15:08 dev-mqueue.mount
+drwxr-xr-x  2 root root 0 Dec 12 16:38 init.scope
+-rw-r--r--  1 root root 0 Dec 12 16:38 io.cost.model
+-rw-r--r--  1 root root 0 Dec 12 16:38 io.cost.qos
+-rw-r--r--  1 root root 0 Dec 12 16:38 io.pressure
+-rw-r--r--  1 root root 0 Dec 12 16:38 io.prio.class
+-r--r--r--  1 root root 0 Dec 12 16:38 io.stat
+-r--r--r--  1 root root 0 Dec 12 16:38 memory.numa_stat
+-rw-r--r--  1 root root 0 Dec 12 16:38 memory.pressure
+--w-------  1 root root 0 Dec 12 16:38 memory.reclaim
+-r--r--r--  1 root root 0 Dec 12 16:38 memory.stat
+-r--r--r--  1 root root 0 Dec 12 16:38 misc.capacity
+drwxr-xr-x  2 root root 0 Dec 13 15:08 mygroup # note our new group here
+drwxr-xr-x  2 root root 0 Dec 13 15:08 proc-sys-fs-binfmt_misc.mount
+drwxr-xr-x  2 root root 0 Dec 13 15:08 sys-fs-fuse-connections.mount
+drwxr-xr-x  2 root root 0 Dec 13 15:08 sys-kernel-config.mount
+drwxr-xr-x  2 root root 0 Dec 13 15:08 sys-kernel-debug.mount
+drwxr-xr-x  2 root root 0 Dec 13 15:08 sys-kernel-tracing.mount
+drwxr-xr-x 57 root root 0 Dec 13 15:18 system.slice
+drwxr-xr-x  3 root root 0 Dec 13 15:08 user.slice
+```
+
+The control groups are organized hierarchically, meaning that each cgroup inherits properties from its parent, and resources can be managed at different levels.
+
+> Note: you output may differ depending on cgroup configuration. Moreover, cgroup v1 uses a different directory structure than cgroup v2. You can check for cgroup version using the `mount | grep cgroup` command.
+
+
+
+**Interacting with cgroups:**
+
+
+
+
+<!-- TODO -->
+Mount the cgroup v2 Hierarchy:
+If not already mounted, you can mount the cgroup v2 hierarchy using:
+bash
+Copy code
+mount -t cgroup2 none /sys/fs/cgroup
+Create a New cgroup:
+Create a directory for your new cgroup in the cgroup v2 hierarchy:
+bash
+Copy code
+mkdir /sys/fs/cgroup/my_cgroup
+Add Processes to the cgroup:
+Similar to v1, write the PID of the process to the cgroup.procs file in your cgroup directory:
+bash
+Copy code
+echo [PID] > /sys/fs/cgroup/my_cgroup/cgroup.procs
+Configure the cgroup:
+Set limits or weights for various resources by writing to appropriate files in the cgroup directory, such as memory.max for memory limits.
+Verify:
+Ensure your settings are correctly applied by inspecting the cgroup.procs file and other relevant files in the cgroup directory.
+Additional Notes:
+Root Privileges: Creating and modifying cgroups typically requires root privileges.
+Tools and Scripts: There are user-space tools and scripts that can simplify cgroup management, such as cgcreate, cgset, cgclassify, etc., part of the libcgroup package.
+Persistence: Changes to cgroups are not persistent across reboots by default. For persistent configuration, you would typically use a boot-time script or a daemon like systemd.
+
+<!-- TODO -->
+Linux monitors changes in the cgroup filesystem primarily through the mechanism known as inotify, a Linux kernel subsystem that provides a means to monitor filesystem events. Here's how it works in the context of cgroups:
+inotify_add_watch
 
 ### Namespaces
 - At the Ottawa Linux Symposium held in 2006, Eric W. Bierderman presented his paper “Multiple Instances of the Global Linux Namespaces”
-- This paper proposed the addition of ten namespaces to the Linux kernel. His inspiration for these additional namespaces was the existing filesystem namespace for mounts, which was introduced in 2002. 
+- This paper proposed the addition of ten namespaces to the Linux kernel. His inspiration for these additional namespaces was the existing filesystem namespace for mounts, which was introduced in 2002.
+
+Linux namespaces are a feature of the Linux kernel that provide isolation for a group of processes. They allow for the partitioning of various aspects of the operating system, so that each set of processes sees its own isolated instance of the global resource. This is one of the key technologies that enable containerization in Linux
 
 **A namespace provides an abstraction to a global system resource that will appear to the processes within the defined namespace as its own isolated instance of a specific global resource.**
+
+Namespaces provide a form of lightweight process virtualization, ensuring that processes in different namespaces cannot see or affect each other. This is fundamental for the security and stability of Linux containers.
 
 Namespaces are used to implement containers; they provide the required isolation between a container and the host system.
 
 Over time, different namespaces have been implemented in the Linux kernel:
 - Cgroup: `CLONE_NEWCGROUP` - Cgroup root directory
 - IPC: `CLONE_NEWIPC` - System V IPC, POSIX message queues
-- Network: `CLONE_NEWNET` - Network devices, stacks, ports, etc.
+- Network: `CLONE_NEWNET` - Network devices, stacks, ports, firewall, etc.
 - Mount: `CLONE_NEWNS`- Mount points
 - PID: `CLONE_NEWPID`- Process IDs
 - User: `CLONE_NEWUSER` - User and group IDs
 - UTS: `CLONE_NEWUTS` - Hostname and NIS domain name
+
+Creating a new network namespace in Linux can be done using either command-line tools or system calls in a C program. Here's how you can do it in both ways:
+
+The ip command from the iproute2 package can be used to manage network namespaces. Here's how to create and use a new network namespace:
+
+Create a New Network Namespace:
+bash
+Copy code
+sudo ip netns add mynetns
+This command creates a new network namespace named mynetns.
+Run a Command in the New Namespace:
+bash
+Copy code
+sudo ip netns exec mynetns [command]
+Replace [command] with any command you want to run in the new network namespace. For example, to open a bash shell in this namespace, you would use sudo ip netns exec mynetns bash.
+Configure the Namespace (optional):
+You might want to set up network interfaces, routing, etc., within the new namespace.
+Deleting the Namespace:
+When you're done, you can remove the namespace with:
+bash
+Copy code
+sudo ip netns del mynetns
+
+
+clone() provides a high degree of control over process creation, allowing for the specification of what to share between the parent and child processes (such as file system, virtual memory, signal handlers, etc.). This makes it more complex but also more powerful than fork().
+
+ali unshare() ali setns()
 
 ### Filesystem or rootfs
 
@@ -173,6 +312,54 @@ The rootfs consists of a set of files, similar in structure to the filesystem mo
 
 The size of rootfs is smaller than a typical OS disk image, since it does not contain the kernel. **The container shares the same kernel as the host machine.**
 
-A rootfs can further be reduced in size by making it contain just the application and configuring it to share the rootfs of the host machine. Using copy-on-write (COW) techniques, a single reduced read-only disk image may be shared between multiple containers.
+LXC (Linux Containers) itself does not inherently use a layered filesystem like Docker does. Instead, LXC's approach to filesystems for containers is more straightforward and traditional compared to the layered filesystem approach commonly associated with Docker and other container technologies. Here's a breakdown of how LXC handles filesystems:
 
+A rootfs can further be reduced in size by making it contain just the application and configuring it to share the rootfs of the host machine. Using copy-on-write (COW) techniques, a single reduced read-only disk image may be shared between multiple containers. - docker ne LXC ce ni na zfs
+
+Chroot
+
+Directory-based Storage - manual offline snapshot, rabis CoW storage drugace, proxmox
+
+ontainer Root Filesystem:
+In LXC, each container typically has its own root filesystem, which is a directory on the host system. This directory contains all the files necessary to run the container, similar to a chroot environment.
+Filesystem Templates and Snapshots:
+LXC provides various templates to create the root filesystem for containers. These templates can be used to install a base operating system like Ubuntu, Debian, Fedora, etc., into the container's root filesystem.
+LXC also supports creating snapshots of containers, but this is different from the layered approach used in Docker.
+Storage Backends:
+LXC supports different storage backends for containers, such as directory-based storage, LVM, ZFS, Btrfs, and more. Some of these, like ZFS and Btrfs, can provide snapshot and cloning features at the filesystem level.
+
+### Device passthrough
+
+
+ChatGPT
+Passing through a PCI device to an LXC (Linux Containers) container involves several steps, including identifying the PCI device, ensuring the host system is configured to allow PCI passthrough, and configuring the LXC container to use the device. Here's a step-by-step guide to accomplish this:
+
+Step 1: Identify the PCI Device
+List PCI Devices: On the host machine, use lspci to list all PCI devices and identify the one you want to pass through. The command is:
+bash
+Copy code
+lspci
+Get Detailed Information: Once you find the device, note down its PCI address, which is typically in the form 0000:00:1f.0. You can get more detailed information about the device using:
+bash
+Copy code
+lspci -v -s 0000:00:1f.0
+Step 2: Prepare the Host for PCI Passthrough
+Enable IOMMU: Ensure that IOMMU (Input-Output Memory Management Unit) is enabled in the BIOS/UEFI settings of your host machine. This is necessary for PCI passthrough.
+Configure the Kernel: Modify the GRUB configuration to enable IOMMU on the Linux kernel. This usually involves adding parameters like intel_iommu=on or amd_iommu=on to the GRUB command line. After editing /etc/default/grub, update GRUB with:
+bash
+Copy code
+update-grub
+Bind the PCI Device: Before passing the device to the container, it needs to be unbound from the host. This might involve unloading the driver or using tools like vfio-pci.
+Step 3: Configure the LXC Container
+Edit Container Configuration: Locate the LXC container configuration file, typically found in /var/lib/lxc/<container-name>/config.
+Add PCI Device to the Configuration: You need to add lines to the container's configuration to allow it to use the PCI device. Add the following:
+bash
+Copy code
+lxc.cgroup.devices.allow = c <major>:<minor> rwm
+lxc.mount.entry = /dev/bus/pci/0000/00/1f.0 dev/bus/pci/0000/00/1f.0 none bind,optional,create=file
+Replace 0000:00:1f.0 with your device's actual PCI address and <major>:<minor> with the device's major and minor numbers.
+Restart the Container: For the changes to take effect, restart the container:
+bash
+Copy code
+lxc-stop -n <container-name> && lxc-start -n <container-name>
 
