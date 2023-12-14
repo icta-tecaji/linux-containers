@@ -31,6 +31,17 @@
 - Security
 
 ### [LXC Networking](./04_LXC_Networking/README.md)
+- Default networking
+- Using dnsmasq service to obtain an IP address in the container
+- Giving a container a persistent IP address
+- Making a container publicly accessible
+- Connecting LXC to the host network
+- Configuring LXC using none network mode
+- Configuring LXC using empty network mode
+- Configuring LXC using veth mode
+- Configuring LXC using phys mode
+- Configuring LXC using ipvlan mode
+- Configuring LXC using macvlan mode
 
 
 ### [LXC Storage](./05_LXC_Storage/README.md)

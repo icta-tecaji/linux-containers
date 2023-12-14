@@ -3,7 +3,7 @@
 - [LXC Networking](https://ubuntu.com/server/docs/containers-lxc#:~:text=the%20root%20user.-,Networking,-By%20default%20LXC)
 - [LXC Manpages: NETWORK](https://linuxcontainers.org/lxc/manpages//man5/lxc.container.conf.5.html#:~:text=container%20on%20shutdown.-,NETWORK,-The%20network%20section)
 - [Network configuration examples](https://github.com/lxc/lxc/tree/main/doc/examples)
-
+- [Setup a network bridge for your LXC containers with lxc-net](https://stanislas.blog/2018/02/setup-network-bridge-lxc-net/)
 
 ## Default networking
 
@@ -232,8 +232,11 @@ lxc.net.0.hwaddr = 00:16:3e:69:28:4c
 
 
 ## Configuring LXC using veth mode
+The NAT mode is the default network mode when creating containers using the LXC template scripts or the libvirt userspace tools. In this mode, the container can reach the outside world using IP masquerading with iptables rules applied on the host.
 
-### Using a different bridge
+In this mode, LXC creates a virtual interface on the host named something like veth366R6F. This is one end of the virtual connection from the container and it should be connected to the software bridge. The other end of the connection is the interface inside the container, by default named eth0.
+
+<!-- ### Using a different bridge
 
 - Start by showing the bridge on the host: `brctl show`
 - Stop the container if it's currently running: `sudo lxc-stop -n br1`
@@ -250,64 +253,26 @@ lxc.net.1.hwaddr = 00:16:3e:69:28:5c
 ```
 - Save the changes and exit the text editor.
 - Assign an IP address to the bridge that the containers can use as their default gateway: `sudo ifconfig lxcbr1 10.0.4.1 netmask 255.255.255.0`
-- Start the container: `sudo lxc-start -n br1`
+- Start the container: `sudo lxc-start -n br1` -->
 
 
 ## Configuring LXC using phys mode
 
+In this mode, we specify a physical interface from the host with the lxc.net.0.link configuration option, which will get assigned to the network namespace of the container and then **make it unavailable for use by the host**.
+
+If we need to have multiple containers using the phys mode, then we'll need that many physical interfaces, which is not always practical.
 
 
+## Configuring LXC using ipvlan mode
 
-
-
-
-
-
-
-
-
-## macvlan and ipvlan
 Finally, you can ask LXC to use macvlan for the container’s NIC. Note that this has limitations and depending on configuration may not allow the container to talk to the host itself. Therefore the other two options are preferred and more commonly used.
 
-## Passing a physical network interface to a container
+## Configuring LXC using macvlan mode
 
-Containers usually connect to the outside world by either having a physical NIC or a veth tunnel endpoint passed into the container. 
-A NIC can only exist in one namespace at a time, so a physical NIC passed into the container is not usable on the host.
-
-
-## Multiple network interfaces in a container
-
-lxc.network.type = veth
-lxc.network.hwaddr = 00:16:3e:3a:f1:c1
-lxc.network.flags = up
-lxc.network.link = lxcbr0
-lxc.network.name = eth0
-
-lxc.network.type = veth
-lxc.network.link = virbr0
-lxc.network.name = virt0
-
-lxc.network.type = phys
-lxc.network.link = eth2
-lxc.network.name = eth1
-With this setup my container will have 3 interfaces, eth0 will be the usual veth device in the lxcbr0 bridge, eth1 will be the host’s eth2 moved inside the container (it’ll disappear from the host while the container is running) and virt0 will be another veth device in the virbr0 bridge on the host.
-
-Those last two interfaces don’t have a mac address or network flags set, so they’ll get a random mac address at boot time (non-persistent) and it’ll be up to the container to bring the link up.
-
-
-
-## Raw network access
-In the previous post I mentioned passing raw devices from the host inside the container. One such container I use relatively often is when working with a remote network over a VPN. That network uses OpenVPN and a raw ethernet tap device.
-
-I needed to have a completely isolated system access that VPN so I wouldn’t get mixed routes and it’d appear just like any other machine to the machines on the remote site.
-
-All I had to do to make this work was set my container’s network configuration to:
-
-lxc.network.type = phys
-lxc.network.hwaddr = 00:16:3e:c6:0e:04
-lxc.network.flags = up
-lxc.network.link = tap0
-lxc.network.name = eth0
-Then all I have to do is start OpenVPN on my host which will connect and setup tap0, then start the container which will steal that interface and use it as its own eth0.The container will then use DHCP to grab an IP and will behave just like if it was a physical machine connect directly in the remote network.
-
+The macvlan network mode allows for a single physical interface on the host to be associated with multiple virtual interfaces having different IP and MAC addresses. There
+are three modes that macvlan can operate in:
+- **Private**: This mode disallows communication between LXC containers
+- **Virtual Ethernet Port Aggregator (VEPA)**: This mode disallows communication between LXC containers unless there's a switch that works as a reflective relay
+- **Bridge**: This mode creates a simple bridge (not to be confused with the Linux bridge or OVS), which allows containers to talk to each other, but it isolates them
+from the host.
 
