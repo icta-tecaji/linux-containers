@@ -133,9 +133,11 @@ Containers rely on the following core features of the Linux kernel to form a con
 - **Filesystem (rootfs)**
     - "guest system rootfs"
 
+Due to the flexibility of of such system design, containers (LXC) also support direct **hardware device passthrough** to guest systems. This is especially important for applications requiring low-level access to PCI devices, such as GPUs and NICs, as well as for USB devices etc.
+
 ### Control Groups (cgroups)
 
-`cgroups`, short for control groups, is a feature of the Linux kernel that allows you to allocate, prioritize, deny, manage, and monitor system resources like CPU time, system memory, network bandwidth (using cgroup networking extensions), or combinations of these resources for a group of processes running on a system. It's a powerful tool for *resource management* and is widely used in various scenarios, especially in containerization and virtualization. 
+`cgroups`, short for control groups, is a feature of the Linux kernel that allows you to allocate, prioritize, deny, manage, and monitor system resources like CPU time, system memory, network bandwidth (using cgroup networking extensions), or combinations of these resources for a group of processes running on a system. It's a powerful tool for **resource management** and is widely used in various scenarios, especially in containerization and virtualization. 
 
 You can group processes into cgroups based on various criteria like user, service, or task. This grouping mechanism can isolate these processes from others, making it useful for system stability and security. In virtualization and containerization (like Docker and LXC), cgroups provide a way to isolate and limit resources used by containers, ensuring that they don’t monopolize system resources. They help in managing and optimizing the performance of applications by controlling the allocation of resources.
 
@@ -178,7 +180,9 @@ sudo cgclassify -g cpu,memory:/mygroup 1234 # PID
 
 You may also interact with cgroups directly on the filesystem. Following a key design philosophy in UNIX, where "everything is a file", cgroups are listed within the pseudo-filesystem subsystem in the directory `/sys/fs/cgroup`, which gives an overview of all the cgroup subsystems available or mounted in the currently running system:
 
-`ls -lh /sys/fs/cgroup`
+```bash
+ls -lh /sys/fs/cgroup
+```
 
 ```bash
 -r--r--r--  1 root root 0 Dec 12 16:38 cgroup.controllers
@@ -218,91 +222,96 @@ drwxr-xr-x  3 root root 0 Dec 13 15:08 user.slice
 
 The control groups are organized hierarchically, meaning that each cgroup inherits properties from its parent, and resources can be managed at different levels.
 
-> Note: you output may differ depending on cgroup configuration. Moreover, cgroup v1 uses a different directory structure than cgroup v2. You can check for cgroup version using the `mount | grep cgroup` command.
+> Note: you output may differ depending on cgroup configuration. Moreover, cgroup v1 uses a different directory structure than cgroup v2. You can check for cgroup version using the `mount | grep cgroup` command. If cgroup sys is not mounted, but is supported by your kernel you may mount the fs using `mount -t cgroup2 none /sys/fs/cgroup`.
 
+We can now view or modify maximum allowed cgroup memory using standard file operations:
 
+```bash
+# get max memory
+cat /sys/fs/cgroup/mygroup/memory.max # result in bytes
+# add PID 1234 to group
+echo 1234 >> /sys/fs/cgroup/mygroup/cgroup.procs
+```
 
-**Interacting with cgroups:**
+Note that these changes are not persistent! For persistent configuration, you would typically use a boot-time script or a daemon like systemd.
 
-
-
-
-<!-- TODO -->
-Mount the cgroup v2 Hierarchy:
-If not already mounted, you can mount the cgroup v2 hierarchy using:
-bash
-Copy code
-mount -t cgroup2 none /sys/fs/cgroup
-Create a New cgroup:
-Create a directory for your new cgroup in the cgroup v2 hierarchy:
-bash
-Copy code
-mkdir /sys/fs/cgroup/my_cgroup
-Add Processes to the cgroup:
-Similar to v1, write the PID of the process to the cgroup.procs file in your cgroup directory:
-bash
-Copy code
-echo [PID] > /sys/fs/cgroup/my_cgroup/cgroup.procs
-Configure the cgroup:
-Set limits or weights for various resources by writing to appropriate files in the cgroup directory, such as memory.max for memory limits.
-Verify:
-Ensure your settings are correctly applied by inspecting the cgroup.procs file and other relevant files in the cgroup directory.
-Additional Notes:
-Root Privileges: Creating and modifying cgroups typically requires root privileges.
-Tools and Scripts: There are user-space tools and scripts that can simplify cgroup management, such as cgcreate, cgset, cgclassify, etc., part of the libcgroup package.
-Persistence: Changes to cgroups are not persistent across reboots by default. For persistent configuration, you would typically use a boot-time script or a daemon like systemd.
-
-<!-- TODO -->
-Linux monitors changes in the cgroup filesystem primarily through the mechanism known as inotify, a Linux kernel subsystem that provides a means to monitor filesystem events. Here's how it works in the context of cgroups:
-inotify_add_watch
+> Aside: Linux monitors changes in the cgroup filesystem through the `inotify` Linux kernel subsystem that provides a means to monitor filesystem events.
 
 ### Namespaces
-- At the Ottawa Linux Symposium held in 2006, Eric W. Bierderman presented his paper “Multiple Instances of the Global Linux Namespaces”
-- This paper proposed the addition of ten namespaces to the Linux kernel. His inspiration for these additional namespaces was the existing filesystem namespace for mounts, which was introduced in 2002.
 
-Linux namespaces are a feature of the Linux kernel that provide isolation for a group of processes. They allow for the partitioning of various aspects of the operating system, so that each set of processes sees its own isolated instance of the global resource. This is one of the key technologies that enable containerization in Linux
+Linux namespaces are a feature of the Linux kernel that provide **resource and process isolation**. They allow for the partitioning of various aspects of the operating system, so that each set of processes sees its own isolated instance of the global resource. This is one of the key technologies that enable containerization in Linux.
 
-**A namespace provides an abstraction to a global system resource that will appear to the processes within the defined namespace as its own isolated instance of a specific global resource.**
+Namespaces provide an abstraction of global system resources that will appear to the processes within the defined namespaces as their own isolated instances of a specific global resources. They enable a form of "lightweight process virtualization", ensuring that processes in different namespaces cannot see or affect each other. This is fundamental for the security and stability of Linux containers; they provide the required isolation between a container and the host system, as well as between containers themselves.
 
-Namespaces provide a form of lightweight process virtualization, ensuring that processes in different namespaces cannot see or affect each other. This is fundamental for the security and stability of Linux containers.
+> Brief implementation history:
+> - At the Ottawa Linux Symposium held in 2006, Eric W. Bierderman presented his paper “Multiple Instances of the Global Linux Namespaces”
+> - This paper proposed the addition of ten namespaces to the Linux kernel. His inspiration for these additional namespaces was the existing filesystem namespace for mounts, which was introduced in 2002.
 
-Namespaces are used to implement containers; they provide the required isolation between a container and the host system.
+**Namespace Types**
 
 Over time, different namespaces have been implemented in the Linux kernel:
-- Cgroup: `CLONE_NEWCGROUP` - Cgroup root directory
-- IPC: `CLONE_NEWIPC` - System V IPC, POSIX message queues
-- Network: `CLONE_NEWNET` - Network devices, stacks, ports, firewall, etc.
 - Mount: `CLONE_NEWNS`- Mount points
-- PID: `CLONE_NEWPID`- Process IDs
+- Network: `CLONE_NEWNET` - Network devices, stacks, firewall, routing tables, etc.
 - User: `CLONE_NEWUSER` - User and group IDs
+- PID: `CLONE_NEWPID`- Process IDs
 - UTS: `CLONE_NEWUTS` - Hostname and NIS domain name
+- IPC: `CLONE_NEWIPC` - System V IPC, POSIX message queues
+- Cgroup: `CLONE_NEWCGROUP` - Cgroup root directory
 
-Creating a new network namespace in Linux can be done using either command-line tools or system calls in a C program. Here's how you can do it in both ways:
+Example: The image below demonstrates the effect of PID namespace by comparing process IDs of the same process as seen from the container (top) and from the host system (bottom). Because `nano` runs in the container, the container assigns it a PID in its own namespace (168). However, the host system keeps track of the sam process in a global namespace, assigning it a different PID (142191).
 
-The ip command from the iproute2 package can be used to manage network namespaces. Here's how to create and use a new network namespace:
+![PID Namespace Demonstration](./images/pid_ns.png)
 
-Create a New Network Namespace:
-bash
-Copy code
-sudo ip netns add mynetns
-This command creates a new network namespace named mynetns.
-Run a Command in the New Namespace:
-bash
-Copy code
-sudo ip netns exec mynetns [command]
-Replace [command] with any command you want to run in the new network namespace. For example, to open a bash shell in this namespace, you would use sudo ip netns exec mynetns bash.
-Configure the Namespace (optional):
-You might want to set up network interfaces, routing, etc., within the new namespace.
-Deleting the Namespace:
-When you're done, you can remove the namespace with:
-bash
-Copy code
-sudo ip netns del mynetns
+**Interfacing with Namespaces**
 
+Creating a new namespace in Linux can be done using either command-line tools or system calls in a C program. Given is the example of creating a new **network namespace**.
 
-clone() provides a high degree of control over process creation, allowing for the specification of what to share between the parent and child processes (such as file system, virtual memory, signal handlers, etc.). This makes it more complex but also more powerful than fork().
+We can use the `ip` command from the `iproute2` package to manage network namespaces. Here's how to create and use a new network namespace:
 
-ali unshare() ali setns()
+```bash
+sudo ip netns add mynetns # add a network namespace
+```
+
+In order to connect the new isolated network namespace to the host (e.g, to enable internet connectivity) we have to create a **virtual ethernet (veth) interface pair (virtual cable)**. We can use the veth interface pair as a crossover ethernet cable to directly connect two "hosts" (two network namespaces).
+
+```bash
+sudo ip link add veth1_a type veth peer name veth1_b # create virtual cable
+sudo ip link set veth1_b netns mynetns # plug one end into mynetns
+sudo ip addr add 10.0.0.10/24 dev veth1_a # add ip to veth iface in default netns (host)
+sudo ip netns exec mynetns ip addr add 10.0.0.11/24 dev veth1_b # add ip to iface in mynetns
+sudo ip link set veth1_a up # bring one end up
+sudo ip netns exec mynetns ip link set veth1_b up # bring the other one up
+```
+
+If we plan to establish connectivity between multiple network namespaces it makes sense to create a new bridge.
+
+```bash
+sudo ip link add nsbr0 type bridge # create new bridge
+sudo ip link set nsbr0 up # bring it up
+sudo ip addr add 10.0.0.1/24 dev nsbr0 # add ip (e.g., to use it as default gw)
+sudo ip netns exec mynetns ip route add default via 10.0.0.1 # add default route in mynetns
+```
+
+Optional: Enable IP forwarding and set up NAT using masquerade rule to enable Internet connectivity:
+
+```bash
+sudo echo 1 > /proc/sys/net/ipv4/ip_forward # enable ip forwarding
+sudo iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE # masquerade
+```
+
+Test connectivity:
+
+```bash
+sudo ip netns exec mynetns bash
+ping 1.1.1.1
+```
+
+> Interfacing using syscalls in C programs (for netns):
+> - using `clone()` instead of `fork()` for spawning processes and setting `CLONE_NEWNET`
+> - or using `setns()` inside the current process
+
+> Additionally, `unshare` command-line utility can be used to simplify process launching in combination with creation of new namespaces.
+
 
 ### Filesystem or rootfs
 
