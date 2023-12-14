@@ -74,6 +74,10 @@ DAC security. MAC security.
 - suid
 - attr
 
+https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux_atomic_host/7/html/container_security_guide/linux_capabilities_and_seccomp
+
+https://earthly.dev/blog/intro-to-linux-capabilities/
+
 ### SELinux and AppArmor
 
 

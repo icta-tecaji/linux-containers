@@ -389,7 +389,9 @@ We can not combine all the described mechanisms to start a Linux container.
 
 To simplify these operations, enable user-friendly management and allow for persistent configuration, several virtualization and tools/environements have been developed:
 
+- `systemd-nspawn` simple tool for running light-weight containers
 - `lxc` project and userspace utilities
+- `libvirt` software collection also supporting container types (`lxc`, `openvz`, etc.)
 - `lxd` project for management of `lxc` containers
 - `docker` based on `containerd` and follows the same principle of operation
 - `proxmox` linux distribution for virtualization (uses `lxc` for containers)
