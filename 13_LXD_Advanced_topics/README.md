@@ -65,6 +65,18 @@ Docker, for instance, comes with its own set of security enhancements and defaul
 In summary, while LXC provides robust tools for isolating and managing containers, ensuring security in an LXC-based environment requires a comprehensive approach, including proper configuration, regular maintenance, and adherence to security best practices. As with any technology, staying informed about potential vulnerabilities and updates is crucial for maintaining a secure environment.
 
 
+### Linux capabilities and Seccomp
+
+DAC security. MAC security.
+- chown
+- chmod
+- acl
+- suid
+- attr
+
+### SELinux and AppArmor
+
+
 ## Running Docker in LXD
 While LXD and Docker often get compared, they shouldn’t be seen as competing technologies. As illustrated above, they each have their own purpose and place in the digital world. In fact, even running Docker using LXD is possible and suitable in certain circumstances.
 
@@ -75,3 +87,39 @@ If you are curious about how to do this, please take a look at this tutorial.
 Or you can watch the video below, where Stéphane Graber leads you through the process.
 
 https://www.youtube.com/watch?time_continue=1&v=_fCSSEyiGro&embeds_referring_euri=https%3A%2F%2Fubuntu.com%2F&embeds_referring_origin=https%3A%2F%2Fubuntu.com&source_ve_path=Mjg2NjY&feature=emb_logo
+
+
+### Device passthrough
+
+
+ChatGPT
+Passing through a PCI device to an LXC (Linux Containers) container involves several steps, including identifying the PCI device, ensuring the host system is configured to allow PCI passthrough, and configuring the LXC container to use the device. Here's a step-by-step guide to accomplish this:
+
+Step 1: Identify the PCI Device
+List PCI Devices: On the host machine, use lspci to list all PCI devices and identify the one you want to pass through. The command is:
+bash
+Copy code
+lspci
+Get Detailed Information: Once you find the device, note down its PCI address, which is typically in the form 0000:00:1f.0. You can get more detailed information about the device using:
+bash
+Copy code
+lspci -v -s 0000:00:1f.0
+Step 2: Prepare the Host for PCI Passthrough
+Enable IOMMU: Ensure that IOMMU (Input-Output Memory Management Unit) is enabled in the BIOS/UEFI settings of your host machine. This is necessary for PCI passthrough.
+Configure the Kernel: Modify the GRUB configuration to enable IOMMU on the Linux kernel. This usually involves adding parameters like intel_iommu=on or amd_iommu=on to the GRUB command line. After editing /etc/default/grub, update GRUB with:
+bash
+Copy code
+update-grub
+Bind the PCI Device: Before passing the device to the container, it needs to be unbound from the host. This might involve unloading the driver or using tools like vfio-pci.
+Step 3: Configure the LXC Container
+Edit Container Configuration: Locate the LXC container configuration file, typically found in /var/lib/lxc/<container-name>/config.
+Add PCI Device to the Configuration: You need to add lines to the container's configuration to allow it to use the PCI device. Add the following:
+bash
+Copy code
+lxc.cgroup.devices.allow = c <major>:<minor> rwm
+lxc.mount.entry = /dev/bus/pci/0000/00/1f.0 dev/bus/pci/0000/00/1f.0 none bind,optional,create=file
+Replace 0000:00:1f.0 with your device's actual PCI address and <major>:<minor> with the device's major and minor numbers.
+Restart the Container: For the changes to take effect, restart the container:
+bash
+Copy code
+lxc-stop -n <container-name> && lxc-start -n <container-name>

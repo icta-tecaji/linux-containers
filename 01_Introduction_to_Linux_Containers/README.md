@@ -133,7 +133,7 @@ Containers rely on the following core features of the Linux kernel to form a con
 - **Filesystem (rootfs)**
     - "guest system rootfs"
 
-Due to the flexibility of of such system design, containers (LXC) also support direct **hardware device passthrough** to guest systems. This is especially important for applications requiring low-level access to PCI devices, such as GPUs and NICs, as well as for USB devices etc.
+Due to the flexibility of of such design, containers (LXC) support nearly identical features as the fully fledged VMs, including enabling direct **hardware device passthrough** to guest systems. This is especially important for efficient operation of applications requiring low-level access to PCI devices, such as GPUs and NICs, as well as for USB devices etc.
 
 ### Control Groups (cgroups)
 
@@ -351,60 +351,45 @@ Simplified diagram of the created environment:
 
 ### Filesystem (rootfs)
 
-The next component needed for a container is the **disk image, which provides the root filesystem (rootfs) for the container**. 
+The next component needed for a container is the **disk image, which provides the root filesystem (rootfs) for the container**. The rootfs consists of a set of files, similar in structure to the filesystem mounted at root on any GNU/Linux-based machine. The size of rootfs is smaller than a typical OS disk image, since it does not contain the kernel. **The container shares the same kernel as the host machine.**
 
-The rootfs consists of a set of files, similar in structure to the filesystem mounted at root on any GNU/Linux-based machine. 
+A rootfs can further be reduced in size by making it contain just the application and configuring it to share the rootfs of the host machine. Using copy-on-write (COW) techniques, a single reduced read-only disk image may be shared between multiple containers.
 
-The size of rootfs is smaller than a typical OS disk image, since it does not contain the kernel. **The container shares the same kernel as the host machine.**
+> LXC (Linux Containers) itself does not inherently use a layered filesystem like Docker does.
 
-LXC (Linux Containers) itself does not inherently use a layered filesystem like Docker does. Instead, LXC's approach to filesystems for containers is more straightforward and traditional compared to the layered filesystem approach commonly associated with Docker and other container technologies. Here's a breakdown of how LXC handles filesystems:
+**How rootfs Works in LXC**
 
-A rootfs can further be reduced in size by making it contain just the application and configuring it to share the rootfs of the host machine. Using copy-on-write (COW) techniques, a single reduced read-only disk image may be shared between multiple containers. - docker ne LXC ce ni na zfs
+- **Isolation:** Each LXC container has its own rootfs, which is isolated from the host and other containers. This ensures that processes within the container only interact with their own filesystem.
+- **Structure:** The structure of rootfs is similar to a typical Linux filesystem, containing directories like /bin, /etc, /lib, and so on. This makes the environment inside the container appear as a separate Linux system to the processes running inside it.
 
-Chroot
+**Distribution and Packaging of Images**
 
-Directory-based Storage - manual offline snapshot, rabis CoW storage drugace, proxmox
+- **Image Repositories:** LXC images are distributed through repositories or registries, similar to Docker images. LXC has its own set of public repositories, and users can also create private repositories.
+- **Packaging:** An LXC image typically includes the rootfs along with metadata and configuration files (templates). These images are often compressed for distribution and then unpacked when a container is created.
+- **Formats:** Images can be in various formats, like tarballs, and may include different Linux distributions or specific application environments.
 
-ontainer Root Filesystem:
-In LXC, each container typically has its own root filesystem, which is a directory on the host system. This directory contains all the files necessary to run the container, similar to a chroot environment.
-Filesystem Templates and Snapshots:
-LXC provides various templates to create the root filesystem for containers. These templates can be used to install a base operating system like Ubuntu, Debian, Fedora, etc., into the container's root filesystem.
-LXC also supports creating snapshots of containers, but this is different from the layered approach used in Docker.
-Storage Backends:
-LXC supports different storage backends for containers, such as directory-based storage, LVM, ZFS, Btrfs, and more. Some of these, like ZFS and Btrfs, can provide snapshot and cloning features at the filesystem level.
+**Mounting rootfs**
 
-### Device passthrough
+- **Directories:** The simplest way to mount rootfs is as a directory on the host filesystem. When a container is created, LXC unpacks the image into a directory, which is then used as the rootfs for the container.
+- **Storage Backends:** LXC supports various storage backends for rootfs, such as LVM, ZFS, Btrfs, and overlay filesystems. These can provide additional features like snapshots, thin provisioning, and efficient storage management.
+- **ZFS Subvolumes:** If ZFS is used, rootfs can be a ZFS subvolume. This allows for features like efficient cloning and snapshotting, which are very useful for quickly creating and managing multiple containers.
 
+### Creating and starting containers
 
-ChatGPT
-Passing through a PCI device to an LXC (Linux Containers) container involves several steps, including identifying the PCI device, ensuring the host system is configured to allow PCI passthrough, and configuring the LXC container to use the device. Here's a step-by-step guide to accomplish this:
+We can not combine all the described mechanisms to start a Linux container.
 
-Step 1: Identify the PCI Device
-List PCI Devices: On the host machine, use lspci to list all PCI devices and identify the one you want to pass through. The command is:
-bash
-Copy code
-lspci
-Get Detailed Information: Once you find the device, note down its PCI address, which is typically in the form 0000:00:1f.0. You can get more detailed information about the device using:
-bash
-Copy code
-lspci -v -s 0000:00:1f.0
-Step 2: Prepare the Host for PCI Passthrough
-Enable IOMMU: Ensure that IOMMU (Input-Output Memory Management Unit) is enabled in the BIOS/UEFI settings of your host machine. This is necessary for PCI passthrough.
-Configure the Kernel: Modify the GRUB configuration to enable IOMMU on the Linux kernel. This usually involves adding parameters like intel_iommu=on or amd_iommu=on to the GRUB command line. After editing /etc/default/grub, update GRUB with:
-bash
-Copy code
-update-grub
-Bind the PCI Device: Before passing the device to the container, it needs to be unbound from the host. This might involve unloading the driver or using tools like vfio-pci.
-Step 3: Configure the LXC Container
-Edit Container Configuration: Locate the LXC container configuration file, typically found in /var/lib/lxc/<container-name>/config.
-Add PCI Device to the Configuration: You need to add lines to the container's configuration to allow it to use the PCI device. Add the following:
-bash
-Copy code
-lxc.cgroup.devices.allow = c <major>:<minor> rwm
-lxc.mount.entry = /dev/bus/pci/0000/00/1f.0 dev/bus/pci/0000/00/1f.0 none bind,optional,create=file
-Replace 0000:00:1f.0 with your device's actual PCI address and <major>:<minor> with the device's major and minor numbers.
-Restart the Container: For the changes to take effect, restart the container:
-bash
-Copy code
-lxc-stop -n <container-name> && lxc-start -n <container-name>
+1. Creating isolated namespaces.
+    - e.g., isolating the filesystem similar to chroot, creating new netns with independent networking stack, etc.
+2. Applying resource limits with cgroups.
+    - e.g., setting cpu and memmory limits, throttling network interfaces, etc.
+3. Implementing security measures with capabilities.
+    - e.g., allow creating sockets, define container "privilege" level (more on that later)
+5. Starting an init process within the container.
+    - init assumes PID 1 inside the container PID ns and starts userspace environment, the init system may differ from the one used by the host (e.g., sysvinit vs systemd)
 
+To simplify these operations, enable user-friendly management and allow for persistent configuration, several virtualization and tools/environements have been developed:
+
+- `lxc` project and userspace utilities
+- `lxd` project for management of `lxc` containers
+- `docker` based on `containerd` and follows the same principle of operation
+- `proxmox` linux distribution for virtualization (uses `lxc` for containers)
