@@ -152,6 +152,16 @@ You can group processes into cgroups based on various criteria like user, servic
 - Block I/O: Limiting access to I/O devices, prioritizing I/O access.
 - Network: Although traditionally not part of cgroups, there are extensions and tools that integrate network bandwidth management into the cgroups framework.
 
+These features are enabled by **kernel resource controllers**. Cgroups v2 make use of the following controllers:
+
+- `io` (set input/output limits/shares on resources)
+- `memory` (set memory use limits and reporting)
+- `pids` (limit number of processes and their children)
+- `rdma` (set Remote DMA / InfiniBand resource limits)
+- `cpu` (adjust scheduler parameters e.g., Completely Fair Scheduler)
+- `cpuset` (restrict available cpu and memory nodes)
+- `perf_event` (performance monitoring and reporting)
+
 **Operation Principles:**
 
 Cgroups provide a mechanism to aggregate sets of tasks or processes and their future children into hierarchical groups. These groups may be configured to have specialized behavior as desired. Under the hood cgroups make use of various kernel features to manage resources, e.g.:
@@ -172,10 +182,21 @@ The `cgroup-tools` package provides several management utilities, including:
 - `cgdelete`: This tool is used to remove a control group.
 
 **Example:** creating a new cgroup, setting its resource limits and migrating a running process
+
+```bash
+# first check if cgroup subsystems are available
+cat /proc/cgroups
+# mount specific subsystems if required
+# sudo mkdir /sys/fs/cgroup/blkio
+# sudo mount -t cgroup -o blkio blkio /sys/fs/cgroup/blkio
+```
+
 ```bash
 sudo cgcreate -g cpu,memory:/mygroup # subsystems and name
 sudo cgset -r memory.max=500M mygroup # memory limit
 sudo cgclassify -g cpu,memory:/mygroup 1234 # PID
+# or spawn new task (process) using cgexec
+sudo cgexec -g cpu,memory:/mygroup nano
 ```
 
 You may also interact with cgroups directly on the filesystem. Following a key design philosophy in UNIX, where "everything is a file", cgroups are listed within the pseudo-filesystem subsystem in the directory `/sys/fs/cgroup`, which gives an overview of all the cgroup subsystems available or mounted in the currently running system:
@@ -233,9 +254,20 @@ cat /sys/fs/cgroup/mygroup/memory.max # result in bytes
 echo 1234 >> /sys/fs/cgroup/mygroup/cgroup.procs
 ```
 
-Note that these changes are not persistent! For persistent configuration, you would typically use a boot-time script or a daemon like systemd.
+> Note that these changes are not persistent! For persistent configuration, you would typically use a boot-time script or a daemon like systemd. The default `libcgroup` configuration file is `/etc/cgconfig.conf`, however that may vary by distribution. Some cgroup features may require kernel boot arguments.
 
 > Aside: Linux monitors changes in the cgroup filesystem through the `inotify` Linux kernel subsystem that provides a means to monitor filesystem events.
+
+**Cgroup Hierarchies and Relationships**
+
+> Note that system processes are called tasks in cgroup terminology.
+
+Cgroup hierarchies must follow a set of rules defining the relationships between cgroup subsystems. An overview of the fundamental rules is available at the [RedHat Customer Portal](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/6/html/resource_management_guide/sec-relationships_between_subsystems_hierarchies_control_groups_and_tasks).
+
+Any process (task) on the system which forks itself creates a child task. A child task automatically inherits the cgroup membership of its parent but can be moved to different cgroups as needed.
+
+![Cgroup Task Forking](./images/cgroup_task_fork.png)
+
 
 ### Namespaces
 
@@ -306,6 +338,10 @@ sudo ip netns exec mynetns bash
 ping 1.1.1.1
 ```
 
+Simplified diagram of the created environment:
+
+![Simplified diagram of the created environment](./images/netns.png)
+
 > Interfacing using syscalls in C programs (for netns):
 > - using `clone()` instead of `fork()` for spawning processes and setting `CLONE_NEWNET`
 > - or using `setns()` inside the current process
@@ -313,7 +349,7 @@ ping 1.1.1.1
 > Additionally, `unshare` command-line utility can be used to simplify process launching in combination with creation of new namespaces.
 
 
-### Filesystem or rootfs
+### Filesystem (rootfs)
 
 The next component needed for a container is the **disk image, which provides the root filesystem (rootfs) for the container**. 
 
