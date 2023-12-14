@@ -86,6 +86,39 @@ lxc.net.0.ipv4.gateway = 10.0.3.1
 5. Start the container: `sudo lxc-start -n br1`
 6. Check the IP address of the container: `sudo lxc-info -n br1`
 
+
+## Making a container publicly accessible
+
+Containers can access to the internet, but cannot be accessed.
+
+We can use the iptables NAT routing table to map a host’s port to a container’s port, with the following command: 
+```
+sudo iptables -t nat -A PREROUTING -i <host_nic> -p tcp --dport <host_port> -j DNAT --to-destination <ct_ip>:<ct_port> 
+```
+
+To be more specific, we’re mapping a port from the host’s public interface to the container’s IP. Obviously, if you want your container to be accessible from the internet, use the interface (host_nic) where you public IPv4 is mounted.
+
+As an exemple, for our container br1:
+- `host_nic`: ens160
+- `ct_ip`: 10.0.3.15
+- `host_port`: 80
+- `ct_port`: 80
+
+Install Nginx on the container: 
+- `sudo lxc-attach -n br1`
+- `apt update && apt install nginx`
+- `apt install curl`
+- `curl http://localhost:80`
+- `exit`
+
+Make the container publicly accessible:
+- Try to access the container from the remote host: `curl http://<HOST_IP>
+- Add the following rule to the host's iptables: `sudo iptables -t nat -A PREROUTING -i ens160 -p tcp --dport 80 -j DNAT --to-destination 10.0.3.15:80`
+- Try to access the container from the remote host: `curl http://<HOST_IP>`. The container is now accessible from the remote host.
+- Get the rule ID: `sudo iptables -t nat -L PREROUTING --line-numbers`
+- Remove the rule from the host's iptables: `sudo iptables -t nat -D PREROUTING <ID>`
+
+
 ## Connecting LXC to the host network
 
 The network virtualization acts at layer two. In order to use the network virtualization, parameters must be specified to define the network interfaces of the container. Several virtual interfaces can be assigned and used in a container even if the system has only one physical network interface.
@@ -157,7 +190,7 @@ those on the host OS, since both share the same root network namespace.
 > Note that unprivileged containers do not work with this setting due to an inability to mount sysfs. An unsafe workaround would be to bind mount the host's sysfs.
 
 Reset the container's network configuration to the default settings: `sudo nano /var/lib/lxc/br1/config`
-```
+```bash
 # Network configuration
 lxc.net.0.type = veth
 lxc.net.0.link = lxcbr0
@@ -170,24 +203,65 @@ lxc.net.0.hwaddr = 00:16:3e:69:28:4c
 
 ## Configuring LXC using empty network mode
 
+The empty mode only creates the loopback interface in the container. The networking configuration file looks similar to the following output:
+- `sudo nano /var/lib/lxc/br1/config`
+```bash
+# Network configuration
+lxc.net.0.type = empty
+lxc.net.0.flags = up
+```
+- `sudo lxc-stop --name br1 && sleep 5 && sudo lxc-start --name br1`
+- `sudo lxc-ls -f`
+- `sudo lxc-attach --name br1`
+- `ifconfig`
+- `route -n`
+- `ping 8.8.8.8`
+- `exit`
+
+Only the loopback interface is present and no routes are configured.
+
+Reset the container's network configuration to the default settings: `sudo nano /var/lib/lxc/br1/config`
+```bash
+# Network configuration
+lxc.net.0.type = veth
+lxc.net.0.link = lxcbr0
+lxc.net.0.flags = up
+lxc.net.0.hwaddr = 00:16:3e:69:28:4c
+```
+- `sudo lxc-stop --name br1 && sleep 5 && sudo lxc-start --name br1 && sleep 5 && sudo lxc-ls -f`
+
+
+## Configuring LXC using veth mode
+
+### Using a different bridge
+
+- Start by showing the bridge on the host: `brctl show`
+- Stop the container if it's currently running: `sudo lxc-stop -n br1`
+- Create a new bridge: `sudo brctl addbr lxcbr1`
+- Show the bridge: `brctl show`
+- Add the following lines to the container's configuration file: `sudo nano /var/lib/lxc/br1/config`
+```bash
+lxc.net.1.type = veth
+lxc.net.1.link = lxcbr1
+lxc.net.1.flags = up
+lxc.net.1.ipv4.address = 10.0.4.13/24
+lxc.net.1.ipv4.gateway = 10.0.4.1
+lxc.net.1.hwaddr = 00:16:3e:69:28:5c
+```
+- Save the changes and exit the text editor.
+- Assign an IP address to the bridge that the containers can use as their default gateway: `sudo ifconfig lxcbr1 10.0.4.1 netmask 255.255.255.0`
+- Start the container: `sudo lxc-start -n br1`
+
+
+## Configuring LXC using phys mode
 
 
 
 
 
 
-https://linuxcontainers.org/lxc/manpages//man5/lxc.container.conf.5.html#:~:text=container%20on%20shutdown.-,NETWORK,-The%20network%20section
 
 
-## Making a container publicly accessible
-If it is desirable for the container to be publicly accessible, there are a few ways to go about it. One is to use iptables to forward host ports to the container, for instance
-
-iptables -t nat -A PREROUTING -p tcp -i eth0 --dport 587 -j DNAT \
-    --to-destination 10.0.3.100:587
-Then, specify the host’s bridge in the container configuration file in place of lxcbr0, for instance
-
-lxc.network.type = veth
-lxc.network.link = br0
 
 
 
@@ -237,21 +311,3 @@ lxc.network.name = eth0
 Then all I have to do is start OpenVPN on my host which will connect and setup tap0, then start the container which will steal that interface and use it as its own eth0.The container will then use DHCP to grab an IP and will behave just like if it was a physical machine connect directly in the remote network.
 
 
-## Using a different bridge
-
-- Start by showing the bridge on the host: `brctl show`
-- Stop the container if it's currently running: `sudo lxc-stop -n br1`
-- Create a new bridge: `sudo brctl addbr lxcbr1`
-- Show the bridge: `brctl show`
-- Add the following lines to the container's configuration file: `sudo nano /var/lib/lxc/br1/config`
-```bash
-lxc.net.1.type = veth
-lxc.net.1.link = lxcbr1
-lxc.net.1.flags = up
-lxc.net.1.ipv4.address = 10.0.4.13/24
-lxc.net.1.ipv4.gateway = 10.0.4.1
-lxc.net.1.hwaddr = 00:16:3e:69:28:5c
-```
-- Save the changes and exit the text editor.
-- Assign an IP address to the bridge that the containers can use as their default gateway: `sudo ifconfig lxcbr1 10.0.4.1 netmask 255.255.255.0`
-- Start the container: `sudo lxc-start -n br1`
