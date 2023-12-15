@@ -1,0 +1,15 @@
+{
+  "python.languageServer": "Pylance",
+  "python.analysis.typeCheckingMode": "basic",
+  "python.analysis.diagnosticMode": "workspace",
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "charliermarsh.ruff",
+  "editor.tabSize": 4,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports.ruff": "explicit",
+    "source.addMissingImports": "explicit",
+    "source.formatDocument.ruff": "explicit",
+    "source.fixAll.ruff": "explicit"
+  },
+  "ruff.lint.args": ["--select=ALL", "--line-length=180"]
+}

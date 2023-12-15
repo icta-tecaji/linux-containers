@@ -48,6 +48,12 @@
 
 
 ### [LXC Integration with Python](./06_LXC_Integration_with_Python/README.md)
+- Python bindings
+- Installation and setup
+- Build and start a container
+- Updating all running containers
+- Stop and destroy all containers
+- Run a Python script inside a container
 
 ### [LXC Practical examples](./07_LXC_Practical_examples/README.md)
 
