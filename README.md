@@ -31,12 +31,29 @@
 - Security
 
 ### [LXC Networking](./04_LXC_Networking/README.md)
+- Default networking
+- Using dnsmasq service to obtain an IP address in the container
+- Giving a container a persistent IP address
+- Making a container publicly accessible
+- Connecting LXC to the host network
+- Configuring LXC using none network mode
+- Configuring LXC using empty network mode
+- Configuring LXC using veth mode
+- Configuring LXC using phys mode
+- Configuring LXC using ipvlan mode
+- Configuring LXC using macvlan mode
 
 
 ### [LXC Storage](./05_LXC_Storage/README.md)
 
 
 ### [LXC Integration with Python](./06_LXC_Integration_with_Python/README.md)
+- Python bindings
+- Installation and setup
+- Build and start a container
+- Updating all running containers
+- Stop and destroy all containers
+- Run a Python script inside a container
 
 ### [LXC Practical examples](./07_LXC_Practical_examples/README.md)
 
