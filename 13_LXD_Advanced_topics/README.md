@@ -1,6 +1,7 @@
 - https://documentation.ubuntu.com/lxd/en/latest/explanation/performance_tuning/
 - https://documentation.ubuntu.com/lxd/en/latest/production-setup/
 
+https://ubuntu.com/server/docs/containers-lxd
 
 
 ## Security
@@ -127,3 +128,33 @@ Restart the Container: For the changes to take effect, restart the container:
 bash
 Copy code
 lxc-stop -n <container-name> && lxc-start -n <container-name>
+
+## Apparmor
+LXD confines containers by default with an apparmor profile which protects containers from each other and the host from containers. For instance this will prevent root in one container from signaling root in another container, even though they have the same uid mapping. It also prevents writing to dangerous, un-namespaced files such as many sysctls and /proc/sysrq-trigger.
+
+If the apparmor policy for a container needs to be modified for a container c1, specific apparmor policy lines can be added in the raw.apparmor configuration key.
+
+## Seccomp
+All containers are confined by a default seccomp policy. This policy prevents some dangerous actions such as forced umounts, kernel module loading and unloading, kexec, and the open_by_handle_at system call. The seccomp configuration cannot be modified, however a completely different seccomp policy – or none – can be requested using raw.lxc (see below).
+
+## Raw LXC configuration
+LXD configures containers for the best balance of host safety and container usability. Whenever possible it is highly recommended to use the defaults, and use the LXD configuration keys to request LXD to modify as needed. Sometimes, however, it may be necessary to talk to the underlying lxc driver itself. This can be done by specifying LXC configuration items in the ‘raw.lxc’ LXD configuration key. These must be valid items as documented in the lxc.container.conf(5) manual page.
+
+## Nesting, Limits, and Privileged Containers
+Containers all share the same host kernel. This means that there is always an inherent trade-off between features exposed to the container and host security from malicious containers. Containers by default are therefore restricted from features needed to nest child containers. In order to run lxc or lxd containers under a lxd container, the security.nesting feature must be set to true:
+
+lxc config set container1 security.nesting true
+Once this is done, container1 will be able to start sub-containers.
+
+In order to run unprivileged (the default in LXD) containers nested under an unprivileged container, you will need to ensure a wide enough UID mapping. Please see the ‘UID mapping’ section below.
+
+
+### UID mappings and Privileged containers
+By default, LXD creates unprivileged containers. This means that root in the container is a non-root UID on the host. It is privileged against the resources owned by the container, but unprivileged with respect to the host, making root in a container roughly equivalent to an unprivileged user on the host. (The main exception is the increased attack surface exposed through the system call interface)
+
+Briefly, in an unprivileged container, 65536 UIDs are ‘shifted’ into the container. For instance, UID 0 in the container may be 100000 on the host, UID 1 in the container is 100001, etc, up to 165535. The starting value for UIDs and GIDs, respectively, is determined by the ‘root’ entry the /etc/subuid and /etc/subgid files. (See the subuid(5) man page.)
+
+It is possible to request a container to run without a UID mapping by setting the security.privileged flag to true:
+
+lxc config set c1 security.privileged true
+Note however that in this case the root user in the container is the root user on the host.

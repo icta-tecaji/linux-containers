@@ -20,7 +20,7 @@ The same tool also allows moving network devices from the host to within the con
 
 
 ## Attaching directories from the host OS and exploring the running filesystem of a container
-- LXC knjiga stran 97
+- LXC knjiga stran 97x
 
 ## Attaching directories from the host OS
 

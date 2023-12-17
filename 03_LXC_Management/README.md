@@ -50,7 +50,7 @@ sudo lxc-ls --fancy
 sudo lxc-autostart --list
 
 # Now we can use the lxc-autostart command again to start all containers
-#configured to autostart
+# configured to autostart
 sudo lxc-autostart -a
 sudo lxc-start -n 01-no-autostart
 

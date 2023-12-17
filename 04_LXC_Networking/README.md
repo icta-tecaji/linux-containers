@@ -18,6 +18,7 @@ The host OS, requires the ability to bridge traffic between the containers/VMs a
 
 To verify that bridging is enabled, run the following command: `lsmod | grep bridge`
 
+<!-- TODO: collision domains? -->
 The built-in Linux bridge is a software layer 2 device. OSI layer 2 devices provide a way of
 connecting multiple Ethernet segments together and forward traffic based on MAC
 addresses, effectively creating separate broadcast domains.
@@ -92,7 +93,7 @@ lxc.net.0.ipv4.gateway = 10.0.3.1
 Containers can access to the internet, but cannot be accessed.
 
 We can use the iptables NAT routing table to map a host’s port to a container’s port, with the following command: 
-```
+```bash
 sudo iptables -t nat -A PREROUTING -i <host_nic> -p tcp --dport <host_port> -j DNAT --to-destination <ct_ip>:<ct_port> 
 ```
 
@@ -265,7 +266,8 @@ If we need to have multiple containers using the phys mode, then we'll need that
 
 ## Configuring LXC using ipvlan mode
 
-Finally, you can ask LXC to use macvlan for the container’s NIC. Note that this has limitations and depending on configuration may not allow the container to talk to the host itself. Therefore the other two options are preferred and more commonly used.
+Finally, you can ask LXC to use ipvlan for the container’s NIC. Note that this has limitations and depending on configuration may not allow the container to talk to the host itself. Therefore the other two options are preferred and more commonly used.
+
 
 ## Configuring LXC using macvlan mode
 
