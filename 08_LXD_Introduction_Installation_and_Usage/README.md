@@ -498,7 +498,7 @@ Enter the following command to display the contents of a profile:
 
 Create an empty profile or delete an existing:
 - `lxc profile create <profile_name>`
-- `lxc profile delte <profile_name>`
+- `lxc profile delete <profile_name>`
 
 To set an instance option for a profile, use the lxc profile set command. Specify the profile name and the key and value of the instance option:
 - `lxc profile set <profile_name> <option_key>=<option_value> <option_key>=<option_value> ...`
@@ -512,54 +512,20 @@ Or configure profiles during container creation time:
 
 > Example: create an autoboot profile
 > ```bash
-> 
+> lxc profile create autoboot
+> lxc profile set autoboot boot.autostart=true
+> for ct in {"first", "limited"}; do lxc profile add $ct autoboot; done;
+> lxc profile show autoboot
 > ```
-
-## Nesting, Limits, and Privileged Containers
-Containers all share the same host kernel. This means that there is always an inherent trade-off between features exposed to the container and host security from malicious containers. Containers by default are therefore restricted from features needed to nest child containers. In order to run lxc or lxd containers under a lxd container, the security.nesting feature must be set to true:
-
-lxc config set container1 security.nesting true
-Once this is done, container1 will be able to start sub-containers.
-
-In order to run unprivileged (the default in LXD) containers nested under an unprivileged container, you will need to ensure a wide enough UID mapping. Please see the ‘UID mapping’ section below.
-
-### Limits
-LXD supports flexible constraints on the resources which containers can consume. The limits come in the following categories:
-
-CPU: limit cpu available to the container in several ways.
-
-Disk: configure the priority of I/O requests under load
-
-RAM: configure memory and swap availability
-
-Network: configure the network priority under load
-
-Processes: limit the number of concurrent processes in the container.
-
-For a full list of limits known to LXD, see the configuration documentation.
-
-### UID mappings and Privileged containers
-By default, LXD creates unprivileged containers. This means that root in the container is a non-root UID on the host. It is privileged against the resources owned by the container, but unprivileged with respect to the host, making root in a container roughly equivalent to an unprivileged user on the host. (The main exception is the increased attack surface exposed through the system call interface)
-
-Briefly, in an unprivileged container, 65536 UIDs are ‘shifted’ into the container. For instance, UID 0 in the container may be 100000 on the host, UID 1 in the container is 100001, etc, up to 165535. The starting value for UIDs and GIDs, respectively, is determined by the ‘root’ entry the /etc/subuid and /etc/subgid files. (See the subuid(5) man page.)
-
-It is possible to request a container to run without a UID mapping by setting the security.privileged flag to true:
-
-lxc config set c1 security.privileged true
-Note however that in this case the root user in the container is the root user on the host.
-
-
-
-### Aliases
 
 
 ### Logs and Troubleshooting
 
-To view debug information about LXD itself, on a systemd based host use
+To view debug information about LXD itself, on a systemd based host use:
+- `journalctl -u lxd`
 
-journalctl -u lxd
-Container logfiles for container c1 may be seen using:
+Container logfiles for a container may be seen using:
+- `lxc info <container_name> --show-log`
 
-lxc info c1 --show-log
-The configuration file which was used may be found under /var/log/lxd/c1/lxc.conf while apparmor profiles can be found in /var/lib/lxd/security/apparmor/profiles/c1 and seccomp profiles in /var/lib/lxd/security/seccomp/c1.
+The configuration file which was used may be found under `/var/log/lxd/<container_name>/lxc.conf` while apparmor profiles can be found in `/var/lib/lxd/security/apparmor/profiles/<container_name>` and seccomp profiles in `/var/lib/lxd/security/seccomp/<contianer_name>`.
 

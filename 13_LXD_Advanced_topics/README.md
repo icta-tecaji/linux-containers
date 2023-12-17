@@ -158,3 +158,9 @@ It is possible to request a container to run without a UID mapping by setting th
 
 lxc config set c1 security.privileged true
 Note however that in this case the root user in the container is the root user on the host.
+
+### Aliases and Projects
+
+name rename
+alias
+project

@@ -8,7 +8,10 @@ Snapshots, mounts, add device lxc config device add c1 opt disk source=/opt path
 - https://stgraber.org/2016/03/15/lxd-2-0-installing-and-configuring-lxd-212/ - Storage backends
 
 distrobuilder
-
+copy
+export
+publish
+restore
 
 For instance, to mount /opt in container at /opt, you could add a disk device:
 - `lxc config device add <container_name> opt disk source=/opt path=opt`
