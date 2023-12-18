@@ -24,7 +24,7 @@ Containerization differs from traditional virtualization technologies and offers
 - Containers are portable and can reliably regenerate a system environment with required software packages, irrespective of the underlying host operating system.
 
 
-## Introduction to Linux Containers
+## Introduction to Containers
 Containerization is the next logical step in virtualization, and there is a huge buzz around this technology. Containers can **provide virtualization at both the operating system level and the application level.**
 
 Some of the possibilities with containers are as follows:
