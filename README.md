@@ -1,5 +1,9 @@
 # Linux Containers
 
+## Exam
+
+The exam can be taken [here](https://forms.gle/NgTUYvXNeqiUfnidA).
+
 ## Content
 
 ### [Introduction to Linux Containers](./01_Introduction_to_Linux_Containers/README.md)
@@ -43,9 +47,12 @@
 - Configuring LXC using ipvlan mode
 - Configuring LXC using macvlan mode
 
-
 ### [LXC Storage](./05_LXC_Storage/README.md)
-
+- Attaching directories from the host OS
+- Backing Stores
+- Creating container backup using lxc-copy
+- Snapshots
+- Passing devices to a running container
 
 ### [LXC Integration with Python](./06_LXC_Integration_with_Python/README.md)
 - Python bindings
@@ -58,7 +65,6 @@
 ### [LXC Practical examples](./07_LXC_Practical_examples/README.md)
 
 ### [LXD Usage](./08_LXD_Usage/README.md)
-
 
 ## Sources
 - [Container and virtualization tools](https://linuxcontainers.org/)

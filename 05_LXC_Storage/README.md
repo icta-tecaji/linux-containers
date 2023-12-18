@@ -1,47 +1,130 @@
 # LXC Storage
 
-- https://ubuntu.com/server/docs/containers-lxc -> Backing Stores
+## Attaching directories from the host OS
+- [LXC manpages: MOUNT POINTS](https://linuxcontainers.org/lxc/manpages//man5/lxc.container.conf.5.html#:~:text=value%20is%20used.-,MOUNT%20POINTS,-The%20mount%20points)
 
-- https://stgraber.org/2013/12/27/lxc-1-0-container-storage/
+
+The root filesystem of LXC containers is visible from the host OS as a regular directory tree. We can directly manipulate files in a running container by just making changes in that directory. LXC also allows for **attaching directories from the host OS inside the container using bind mount**.
+
+A bind mount is a different view of the directory tree. It achieves this by replicating the existing directory tree under a different mount point.
+
+Let's create a new container, directory, and a file on the host:
+```bash
+mkdir /tmp/export_to_container
+
+hostname -f > /tmp/export_to_container/file
+
+sudo lxc-create -t download \
+  -n mount_container -- \
+  --dist ubuntu \
+  --release jammy \
+  --arch amd64
+```
+
+Use the `lxc.mount.entry` option in the configuration file of the container, telling LXC what directory to bind mount from the host, and the mount point inside the container to bind to:
+- `echo "lxc.mount.entry = /tmp/export_to_container/ /var/lib/lxc/mount_container/rootfs/mnt none ro,bind 0 0" | sudo tee -a /var/lib/lxc/mount_container/config`
+- `sudo cat /var/lib/lxc/mount_container/config`
+
+Once the container is started, we can see that the `/mnt` inside it now contains the file that we created in the `/tmp/export_to_container` directory on the host OS earlier:
+- `sudo lxc-start -n mount_container`
+- `sudo lxc-ls -f`
+- `sudo lxc-attach -n mount_container`
+- `cat /mnt/file`
+- `ls -l /mnt`
+- `exit`
+
+> When an LXC container is in a running state, some files are only visible from `/proc` on the host OS. In order to make persistent changes in the root filesystem of a container, modify the files in `/var/lib/lxc/mount_container/rootfs/` instead.
+
+## Backing Stores
+- [Backing Stores](https://ubuntu.com/server/docs/containers-lxc#:~:text=autostart%20a%20container.-,Backing%20Stores,-LXC%20supports%20several)
+- [Storage backingstores](https://stgraber.org/2013/12/27/lxc-1-0-container-storage/)
+
+LXC supports several backing stores (default dir type, LVM, Btrfs, and ZFS) for container root filesystems. The default is a **simple directory backing store**, because it requires no prior host customization, so long as the underlying filesystem is large enough. It also requires **no root privilege to create** the backing store, so that it is seamless for unprivileged use. 
+- The rootfs for a privileged directory backed container is located (by default) under `/var/lib/lxc/C1/rootfs`, while the rootfs for an unprivileged container is under `~/.local/share/lxc/C1/rootfs` (C1 is the name of the container).
+
+Using the default store might be sufficient in some cases, however, to take advantage of more advanced features, such as container snapshots and backups, other types are available.
+
+Clones are either snapshots or copies of another container. 
+- A **copy** is a new container copied from the original, and takes as much space on the host as the original. 
+- A **snapshot** exploits the underlying backing store’s snapshotting ability to make a copy-on-write container referencing the first. Snapshots can be created from btrfs, LVM, zfs, and directory backed containers. 
+
+
+## Creating container backup using lxc-copy
+- [Manpages: lxc-copy](https://linuxcontainers.org/lxc/manpages//man1/lxc-copy.1.html)
+
+Regardless of the backend store of the container, we can use the `lxc-copy` utility to create a full copy of the LXC instance.
+
+> `lxc-clone` has been deprecated, and replaced by `lxc-copy`.
+
+Before we copy a container make sure to stop it.
+
+Specify the name of the container on the original host we want to back up, and a name for the copy:
+- `sudo lxc-stop -n mount_container`
+- `sudo lxc-ls -f`
+- `sudo lxc-copy --name mount_container --newname mount_container_backup`
+- `sudo ls /var/lib/lxc`
+
+Creating a full copy will update the configuration file of the new container with the newly specified name and location of the rootfs:
+- `sudo cat /var/lib/lxc/mount_container_backup/config`
+
+
+## Snapshots
+To more easily support the use of snapshot clones for iterative container development, LXC supports snapshots. When working on a container C1, before making a potentially dangerous or hard-to-revert change, you can create a snapshot.
+```bash
+# Start the container
+sudo lxc-start -n mount_container
+
+sudo lxc-ls -f
+
+# Associate the comment in comment_file with the newly created snapshot.
+echo "before installing NGINX" > snap-comment
+# Create a snapshot of the container.
+sudo lxc-snapshot -n mount_container -c snap-comment
+# Snapshot fails because the container is running.
+sudo lxc-snapshot -n mount_container -L -C
+sudo lxc-stop -n mount_container
+
+# Create a snapshot of the container.
+sudo lxc-snapshot -n mount_container -c snap-comment
+# Check the snapshot.
+sudo lxc-snapshot -n mount_container -L -C
+
+# Start the container and install NGINX.
+sudo lxc-start -n mount_container
+sudo lxc-attach -n mount_container
+apt update
+apt install nginx
+apt list --installed | grep nginx
+exit
+
+# Revert the container:
+sudo lxc-stop -n mount_container
+sudo lxc-snapshot -n mount_container -r snap0
+
+# Start the container and check that NGINX is not installed.
+sudo lxc-start -n mount_container
+sudo lxc-attach -n mount_container
+apt update
+apt list --installed | grep nginx
+exit
+
+# Or if you want to restore a snapshot as its own container, you can use:
+sudo lxc-stop -n mount_container
+sudo lxc-ls -f
+sudo lxc-snapshot -n mount_container -r snap0 -N mount_container_no_nginx
+sudo lxc-ls -f
+```
 
 ## Passing devices to a running container
-It’s great being able to enter and leave the container at will, but what about accessing some random devices on your host?
+- [Manpages: lxc-device](https://linuxcontainers.org/lxc/manpages//man1/lxc-device.1.html)
 
-By default LXC will prevent any such access using the devices cgroup as a filtering mechanism. You could edit the container configuration to allow the right additional devices and then restart the container.
+By default LXC will prevent any access using the devices cgroup as a filtering mechanism. You could edit the container configuration to allow the right additional devices and then restart the container.
 
-But for one-off things, there’s also a very convenient tool called “lxc-device”.
-With it, you can simply do:
-
-`sudo lxc-device add -n p1 /dev/ttyUSB0 /dev/ttyS0`
-
-Which will add (mknod) /dev/ttyS0 in the container with the same type/major/minor as /dev/ttyUSB0 and then add the matching cgroup entry allowing access from the container.
+But for one-off things, there’s also a very convenient tool called `lxc-device`. With it, you can simply do:
+- `sudo lxc-device add -n p1 /dev/ttyUSB0 /dev/ttyS0`
 
 The same tool also allows moving network devices from the host to within the container.
 
-
-## Attaching directories from the host OS and exploring the running filesystem of a container
-- LXC knjiga stran 97
-
-## Attaching directories from the host OS
-
-Exchanging data with a container
-Because containers directly share their filesystem with the host, there’s a lot of things that can be done to pass data into a container or to get stuff out.
-
-The first obvious one is that you can access the container’s root at:
-/var/lib/lxc/<container name>/rootfs/
-
-That’s great, but sometimes you need to access data that’s in the container and on a filesystem which was mounted by the container itself (such as a tmpfs). In those cases, you can use this trick:
-
-sudo ls -lh /proc/$(sudo lxc-info -n p1 -p -H)/root/run/
-Which will show you what’s in /run of the running container “p1”.
-
-Now, that’s great to have access from the host to the container, but what about having the container access and write data to the host?
-Well, let’s say we want to have our host’s /var/cache/lxc shared with “p1”, we can edit /var/lib/lxc/p1/fstab and append:
-
-/var/cache/lxc var/cache/lxc none bind,create=dir
-This line means, mount “/var/cache/lxc” from the host as “/var/cache/lxc” (the lack of initial / makes it relative to the container’s root), mount it as a bind-mount (“none” fstype and “bind” option) and create any directory that’s missing in the container (“create=dir”).
-
-Now restart “p1” and you’ll see /var/cache/lxc in there, showing the same thing as you have on the host. Note that if you want the container to only be able to read the data, you can simply add “ro” as a mount flag in the fstab.
 
 ## Using the LVM backing store
 
@@ -49,56 +132,4 @@ Now restart “p1” and you’ll see /var/cache/lxc in there, showing the same 
 
 ## Using the ZFS backing store
 
-
-## Cloning
-For rapid provisioning, you may wish to customize a canonical container according to your needs and then make multiple copies of it. This can be done with the `lxc-clone` program.
-
-Clones are either snapshots or copies of another container. 
-- A **copy** is a new container copied from the original, and takes as much space on the host as the original. 
-- A **snapshot** exploits the underlying backing store’s snapshotting ability to make a copy-on-write container referencing the first. Snapshots can be created from btrfs, LVM, zfs, and directory backed containers. 
-
-
-Each backing store has its own peculiarities - for instance, LVM containers which are not thinpool-provisioned cannot support snapshots of snapshots; zfs containers with snapshots cannot be removed until all snapshots are released; LVM containers must be more carefully planned as the underlying filesystem may not support growing; btrfs does not suffer any of these shortcomings, but suffers from reduced fsync performance causing dpkg and apt to be slower.
-
-Snapshots of directory-packed containers are created using the overlay filesystem. For instance, a privileged directory-backed container C1 will have its root filesystem under /var/lib/lxc/C1/rootfs. A snapshot clone of C1 called C2 will be started with C1’s rootfs mounted readonly under /var/lib/lxc/C2/delta0. Importantly, in this case C1 should not be allowed to run or be removed while C2 is running. It is advised instead to consider C1 a canonical base container, and to only use its snapshots.
-
-Given an existing container called C1, a copy can be created using:
-
-sudo lxc-clone -o C1 -n C2
-A snapshot can be created using:
-
-sudo lxc-clone -s -o C1 -n C2
-See the lxc-clone manpage for more information.
-
-## Copy
-
-Cloning the container and its power off
-
-Before we clone a container make sure to stop it using the command discussed above, then type the below command to make a clone of it. The name of our cloned container will be sample2.
-
-Note: Earlier the command had lxc-clone instead of lxc-copy, lxc-clone is now deprecated.
-
-sudo lxc-copy -n <old container> -N <new container>
-
-
-## Snapshots
-To more easily support the use of snapshot clones for iterative container development, LXC supports snapshots. When working on a container C1, before making a potentially dangerous or hard-to-revert change, you can create a snapshot
-
-sudo lxc-snapshot -n C1
-which is a snapshot-clone called ‘snap0’ under /var/lib/lxcsnaps or $HOME/.local/share/lxcsnaps. The next snapshot will be called ‘snap1’, etc. Existing snapshots can be listed using lxc-snapshot -L -n C1, and a snapshot can be restored - erasing the current C1 container - using lxc-snapshot -r snap1 -n C1. After the restore command, the snap1 snapshot continues to exist, and the previous C1 is erased and replaced with the snap1 snapshot.
-
-Snapshots are supported for btrfs, lvm, zfs, and overlayfs containers. If lxc-snapshot is called on a directory-backed container, an error will be logged and the snapshot will be created as a copy-clone. The reason for this is that if the user creates an overlayfs snapshot of a directory-backed container and then makes changes to the directory-backed container, then the original container changes will be partially reflected in the snapshot. If snapshots of a directory backed container C1 are desired, then an overlayfs clone of C1 should be created, C1 should not be touched again, and the overlayfs clone can be edited and snapshotted at will, as such
-
-lxc-clone -s -o C1 -n C2
-lxc-start -n C2 -d # make some changes
-lxc-stop -n C2
-lxc-snapshot -n C2
-lxc-start -n C2 # etc
-
-
-
 ## Ephemeral Containers
-While snapshots are useful for longer-term incremental development of images, ephemeral containers utilize snapshots for quick, single-use throwaway containers. Given a base container C1, you can start an ephemeral container using
-
-lxc-start-ephemeral -o C1
-The container begins as a snapshot of C1. Instructions for logging into the container will be printed to the console. After shutdown, the ephemeral container will be destroyed. See the lxc-start-ephemeral manual page for more options.
