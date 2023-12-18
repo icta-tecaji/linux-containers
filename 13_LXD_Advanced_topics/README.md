@@ -164,3 +164,32 @@ Note however that in this case the root user in the container is the root user o
 name rename
 alias
 project
+
+### init=/bin/bash in cmdline equivalent
+
+The container requirements specify that every container must come with an empty /dev, /proc and /sys directory, and that /sbin/init must exist. If those directories don’t exist, LXD cannot mount them, and systemd will then try to do so. As this is an unprivileged container, systemd does not have the ability to do this, and it then freezes.
+
+So you can see the environment before anything is changed, and you can explicitly change the init system in a container using the raw.lxc configuration parameter. This is equivalent to setting init=/bin/bash on the Linux kernel command line.
+
+lxc config set systemd raw.lxc 'lxc.init.cmd = /bin/bash'
+
+Here is what it looks like:
+
+user@host:~$ lxc config set systemd raw.lxc 'lxc.init.cmd = /bin/bash'
+user@host:~$ lxc start systemd
+user@host:~$ lxc console --show-log systemd
+ 
+Console log:
+ 
+[root@systemd /]#
+Now that the container has started, you can check it and see that things are not running as well as expected:
+
+user@host:~$ lxc exec systemd -- bash
+[root@systemd ~]# ls
+[root@systemd ~]# mount
+mount: failed to read mtab: No such file or directory
+[root@systemd ~]# cd /
+[root@systemd /]# ls /proc/
+sys
+[root@systemd /]# exit
+Because LXD tries to auto-heal, it created some of the directories when it was starting up. Shutting down and restarting the container fixes the problem, but the original cause is still there - the template does not contain the required files.

@@ -535,5 +535,8 @@ To view debug information about LXD itself, on a systemd based host use:
 Container logfiles for a container may be seen using:
 - `lxc info <container_name> --show-log`
 
+The LXD snap includes a tool that collects the relevant server information for debugging. Enter the following command to run it:
+- `sudo lxd.buginfo`
+
 The configuration file which was used may be found under `/var/log/lxd/<container_name>/lxc.conf` while apparmor profiles can be found in `/var/lib/lxd/security/apparmor/profiles/<container_name>` and seccomp profiles in `/var/lib/lxd/security/seccomp/<contianer_name>`.
 

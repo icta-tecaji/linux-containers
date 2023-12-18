@@ -27,6 +27,14 @@ You should consider using LXD if you want to containerize different environments
 
 LXD provides **a better user experience to LXC** by building on top of LXC. LXD uses `liblxc` and its Go language bindings to create and manage containers.
 
+> Quick differences between VM, LXC/LXD, Docker and Snap:
+> ![Containerization differences](./images/vm_lxd_docker_snap.jpg)
+> To sum it up in short:
+> - LXC/LXD are “machine containers” with a persistent filesystem that works like a VM
+> - Docker are “process containers” with an overlay filesystem over a static image (with options for persistent storage)
+> - Snaps are “application containers” that directly extends functionality of the underlying host
+
+
 
 ### Releases
 
