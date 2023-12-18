@@ -131,6 +131,9 @@ The easiest way to install LXD is to install the snap package.
 
 For additional details on managing the LXD snap package, see [Manage the LXD Snap](./manage_lxd_snap.md).
 
+> To restart LXD installed via snap, use:
+> - `sudo systemctl restart snap.lxd.daemon`
+
 ### LXD Initialization
 
 Sources:
