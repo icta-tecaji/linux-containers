@@ -63,6 +63,7 @@ The exam can be taken [here](https://forms.gle/NgTUYvXNeqiUfnidA).
 - Run a Python script inside a container
 
 ### [LXC Practical examples](./07_LXC_Practical_examples/README.md)
+- OpenWRT container with public access
 
 ### [LXD Usage](./08_LXD_Usage/README.md)
 

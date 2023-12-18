@@ -113,6 +113,15 @@ sudo lxc-stop -n mount_container
 sudo lxc-ls -f
 sudo lxc-snapshot -n mount_container -r snap0 -N mount_container_no_nginx
 sudo lxc-ls -f
+
+# Delete the snapshot.
+sudo lxc-snapshot -n mount_container -d snap0
+
+# Stop and remove all containers.
+sudo lxc-destroy -n mount_container
+sudo lxc-destroy -n mount_container_no_nginx
+sudo lxc-destroy -n mount_container_backup
+sudo lxc-ls -f
 ```
 
 ## Passing devices to a running container
