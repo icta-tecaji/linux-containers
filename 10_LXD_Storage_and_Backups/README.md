@@ -291,6 +291,12 @@ You can use periodic snapshots. For example, to configure daily snapshots, use t
 
 > When scheduling regular snapshots, consider setting an automatic expiry (snapshots.expiry) and a naming pattern for snapshots (snapshots.pattern)
 
+> If using ZFS you can view and create snapshots with:
+>   ```
+>   sudo zfs snapshot default/containers/first@my_snap
+>   sudo zfs list -t snapshot
+>   ```
+
 **Restore snapshot**
 
 To restore, you must **first stop all instances that use the storage volume**. Then use the following command:
