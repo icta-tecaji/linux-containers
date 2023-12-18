@@ -1,10 +1,47 @@
+# Exercise
+
+## LXD Example: OpenWRT with Luci
+
+Find suitable remote:
+- `lxc remote list`
+
+Find openwrt container image:
+- `lxc image list images:openwrt`
+
+Launch new instance:
+- `lxc launch images:openwrt/23.05 openwrt`
+
+Enter sh:
+- `lxc exec openwrt -- /bin/sh`
+
+Install luci:
+- `opkg update && opkg install luci nano`
+
+Launch uhttpd:
+- `/etc/init.d/uhttpd start`
+
+Configure firewall:
+- `nano /etc/config/firewall`
+```
+config rule
+	option enabled '1'
+	option target 'ACCEPT'
+	option src 'wan'
+	option proto 'tcp'
+	option dest_port '80'
+	option name 'AllowWANWeb'
+```
+- `/etc/init.d/firewall restart`
+
+Forward ports:
+- `sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j DNAT --to-destination <container_ip>`
+
+
+# Advanced Topics
+
 ## Clustering
 
 - https://documentation.ubuntu.com/lxd/en/latest/explanation/clustering/
-
-.....
-
-
 - https://documentation.ubuntu.com/lxd/en/latest/explanation/performance_tuning/
 - https://documentation.ubuntu.com/lxd/en/latest/production-setup/
 

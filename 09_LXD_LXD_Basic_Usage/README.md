@@ -175,6 +175,8 @@ Use the following syntax to create a container: `lxc launch|init <image_server>:
 
 - You can list all images that are available from a remote using the following syntax: `lxc image list [<remote>:]`
 
+> Note: arm devices may need /arm64 images
+
 - List local images by running the following command: `lxc image list local:`
 - List images from ubuntu remote by version and type filter: `lxc image list ubuntu:22.04 type=container`
 - List image info: `lxc image info ubuntu:22.04`
