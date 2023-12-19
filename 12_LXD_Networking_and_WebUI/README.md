@@ -2,8 +2,8 @@
 
 Sources:
 
-- [LXD Networks explaner](https://documentation.ubuntu.com/lxd/en/latest/explanation/networks/)
-- [LXD Networks](https://documentation.ubuntu.com/lxd/en/latest/networks/)
+- ✅ [LXD Networks explaner](https://documentation.ubuntu.com/lxd/en/latest/explanation/networks/)
+- ✅ [LXD Networks](https://documentation.ubuntu.com/lxd/en/latest/networks/)
 
 
 ## LXD Networking Basics
@@ -299,7 +299,7 @@ Useful tools:
 
 Sources:
 
-- [How to access the LXD web UI](https://documentation.ubuntu.com/lxd/en/latest/howto/access_ui/)
+- ✅ [How to access the LXD web UI](https://documentation.ubuntu.com/lxd/en/latest/howto/access_ui/)
 
 ### LXD Server Configuration
 

@@ -366,7 +366,7 @@ Or configure profiles during container creation time:
 
 Sources:
 
-- [Backing up instances](https://documentation.ubuntu.com/lxd/en/latest/howto/instances_backup/)
+- ✅ [Backing up instances](https://documentation.ubuntu.com/lxd/en/latest/howto/instances_backup/)
 
 ### Back up
 
@@ -384,8 +384,8 @@ Which method to choose depends both on your use case and on the storage driver y
 
 Sources:
 
-- [Manage snapshots](https://documentation.ubuntu.com/lxd/en/latest/tutorial/first_steps/#manage-snapshots)
-- [Migration](https://documentation.ubuntu.com/lxd/en/latest/migration/)
+- ✅ [Manage snapshots](https://documentation.ubuntu.com/lxd/en/latest/tutorial/first_steps/#manage-snapshots)
+- ✅ [Migration](https://documentation.ubuntu.com/lxd/en/latest/migration/)
 
 You can save your instance at a point in time by creating an instance snapshot, which makes it easy to restore the instance to a previous state. Most storage drivers support optimized snapshot creation (e.g., COW, fast and efficient operation).
 
