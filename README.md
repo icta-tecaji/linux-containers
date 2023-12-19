@@ -65,7 +65,73 @@ The exam can be taken [here](https://forms.gle/NgTUYvXNeqiUfnidA).
 ### [LXC Practical examples](./07_LXC_Practical_examples/README.md)
 - OpenWRT container with public access
 
-### [LXD Usage](./08_LXD_Usage/README.md)
+### [LXD Introduction and Installation](./08_LXD_Introduction_and_Installation/README.md)
+- LXD Introduction
+    - Releases
+    - About LXD and LXC
+    - LXD Daemon and LXD Client
+    - LXD Containers and Virtual Machines
+- LXD Installation and Initialization
+    - LXD Installation
+    - LXD Initialization
+
+### [LXD Basic Usage](./09_LXD_Basic_Usage/README.md)
+- LXD Images and Image Servers
+- Running Your First System Container with LXD
+- Interacting with Containers
+- LXD Profiles and Container Configuration
+    - Container Configuration
+    - Profiles
+- Managing Container Instances
+    - Back up
+    - Snapshots
+    - Backup/Restore to/from File (Export/Import)
+    - Copying or Moving Containers
+    - Create, Manage and Publish Images
+- Logs and Troubleshooting
+
+### [LXD Storage and Backups](./10_LXD_Storage_and_Backups/README.md)
+- Storage Volumes and Content Types
+- Exploring Default Installation (ZFS on Loop)
+- Sharing Filesystems Between Host and Guest
+- Managing Storage Pools
+    - List, Create, Configure, Resize
+    - Set Container Instance Storage Pool
+- Manage Storage Volumes
+    - List Volumes
+    - Create Volumes and Add to Guest
+    - Configure Volumes
+    - Resize Volumes
+    - Move and Copy Volumes
+    - Backup Volumes
+
+### [LXD Networking and Web UI](./11_LXD_Networking_and_WebUI/README.md)
+- LXD Networking Basics
+- Fully Controlled Bridge Networks
+- Managing LXD Networks
+    - List, View, Create, Delete
+    - Configure
+    - Example: Port Forwarding
+    - Example: Masquerading Guest IP
+- Managing Instance Network Devices
+    - List and Create Network Devices
+    - Instance NIC Configuration
+- Networking Example: Configure VLANs
+- Network Debugging
+- LXD WebUI
+    - LXD Server Configuration
+
+### [LXD Exercise and Advanced Topics](./12_LXD_Exercise_and_Advanced_Topics/README.md)
+- Exercise
+    - LXD Example: OpenWRT with Luci
+- Resources for Advanced Topics
+    - Clustering
+    - Security
+    - Running Docker in LXD
+    - Device passthrough
+    - Nesting, Limits, and Privileged Containers
+    - UID Mappings and Privileged Containers
+    - Booting Containers with Kernel Command Line Parameters
 
 ## Sources
 - [Container and virtualization tools](https://linuxcontainers.org/)
