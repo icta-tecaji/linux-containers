@@ -2,7 +2,8 @@
 
 ## Exam
 
-The exam can be taken [here](https://forms.gle/NgTUYvXNeqiUfnidA).
+- The exam can be taken [here](https://forms.gle/NgTUYvXNeqiUfnidA).
+- Satisfaction Survey (Topic: Linux) can be taken [here](https://forms.gle/rjXngid9YDPB3kas6).
 
 ## Content
 
