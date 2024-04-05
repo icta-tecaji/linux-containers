@@ -24,15 +24,15 @@ When your machine starts, an init script will ask `lxc-autostart` to start all c
 # Create the first container (no autostart):
 sudo lxc-create -t download \
   -n 01-no-autostart -- \
-  --dist debian \
-  --release bookworm \
+  --dist ubuntu \
+  --release jammy \
   --arch amd64
 
 # Create the second container (autostart):
 sudo lxc-create -t download \
   -n 02-autostart-privileged -- \
-  --dist debian \
-  --release bookworm \
+  --dist ubuntu \
+  --release jammy \
   --arch amd64
 
 # Check (autostart is 0):
@@ -52,6 +52,7 @@ sudo lxc-autostart --list
 # Now we can use the lxc-autostart command again to start all containers
 # configured to autostart
 sudo lxc-autostart -a
+sudo lxc-ls --fancy
 sudo lxc-start -n 01-no-autostart
 
 # Check (autostart is 0):
@@ -101,8 +102,8 @@ That very simply freezes all the processes in the container so they won’t get 
 # Create a container:
 sudo lxc-create -t download \
   -n container-test -- \
-  --dist debian \
-  --release bookworm \
+  --dist ubuntu \
+  --release jammy \
   --arch amd64
 
 # Start the container:
@@ -188,14 +189,15 @@ LXC comes with tools to limit container resources. The container must be started
 # Create a container:
 sudo lxc-create -t download \
   -n container-test -- \
-  --dist debian \
-  --release bookworm \
+  --dist ubuntu \
+  --release jammy \
   --arch amd64
 
 sudo lxc-start -n container-test
 sudo lxc-ls --fancy
 
 # set up the available memory for a container to 512 MB
+sudo lxc-attach --name container-test -- free -h
 sudo lxc-cgroup -n container-test memory.limit_in_bytes 536870912
 
 # check the memory limit:
@@ -236,8 +238,8 @@ If something goes wrong when starting a container, the first step should be to g
 ```bash
 sudo lxc-create -t download \
   -n container-test-3 -- \
-  --dist debian \
-  --release bookworm \
+  --dist ubuntu \
+  --release jammy \
   --arch amd64
 
 sudo lxc-start -n container-test-3 -l debug -o debug.out
