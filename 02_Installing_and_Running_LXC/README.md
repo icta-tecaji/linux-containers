@@ -36,7 +36,8 @@ LXC is supported by all modern GNU/Linux distributions, and there should already
 
 - [Info about releases](https://linuxcontainers.org/lxc/news/)
 
-LXC 5.0 and 4.0 are long term support releases:
+LXC 6.0, 5.0 and 4.0 are long term support releases:
+- LXC 6.0 will be supported until June 1st 2029 (current: LXC 6.0.0)
 - LXC 5.0 will be supported until June 1st 2027 (current: LXC 5.0.3)
 - LXC 4.0 will be supported until June 1st 2025 (current: LXC 4.0.12)
 
@@ -54,9 +55,9 @@ Ubuntu is also one of the few (if not only) Linux distributions to come by defau
 
 On such an Ubuntu system, installing LXC is as simple as:
 ```bash
-sudo apt-get update
-sudo apt-get upgrade # (optional but recommended)
-sudo apt-get install lxc
+sudo apt update
+sudo apt upgrade # (optional but recommended)
+sudo apt install lxc
 ```
 
 This will pull in the required and recommended dependencies, as well as set up a network bridge for containers to use.
@@ -81,6 +82,19 @@ Each of the preceding commands has its own [dedicated manual (man) page](https:/
 For LXC userspace tools to work properly in the host operating system, you must **ensure that all the kernel features required for LXC support are enabled** in the running host kernel. This can be verified using `lxc-checkconfig`.
 
 > Everything listed in the `lxc-checkconfig` command output should have the status enabled; otherwise, try restarting the system.
+
+If using Ubuntu 22.04 the following option are missing:
+```
+Cgroup v1 systemd controller: missing
+Cgroup v1 freezer controller: missing
+Cgroup ns_cgroup: required
+```
+
+Edit `/etc/default/grub` and ensure that `GRUB_CMDLINE_LINUX` contains:
+- `GRUB_CMDLINE_LINUX="systemd.unified_cgroup_hierarchy=false"`
+- Then run `sudo update-grub` and reboot the system to apply the changes.
+- `sudo reboot`
+- Then run `lxc-checkconfig` again to verify that all the required kernel features are enabled.
 
 
 ## LXC Default Configuration
@@ -197,6 +211,10 @@ The rootfs directory looks like a regular Linux filesystem. You can manipulate t
 - `ls -al`
 - `exit`
 
+To stop the container, run the following command:
+- `sudo lxc-stop -n my-first-ctr`
+- `sudo lxc-destroy -n my-first-ctr`
+
 
 ## Unprivileged LXC containers
 Unprivileged containers are more limited, for instance being unable to create device nodes or mount block-backed filesystems. However they are less dangerous to the host, as the root UID in the container is mapped to a non-root UID on the host.
@@ -231,7 +249,8 @@ Because of that, most distribution templates simply won't work with those. Inste
 1. Make sure your user has a uid and gid map defined in `/etc/subuid` and `/etc/subgid`.
     - On Ubuntu systems, a default allocation of 65536 uids and gids is given to every new user on the system, so you should already have one. If not, you'll have to use usermod to give yourself one.
 2. Next up is `/etc/lxc/lxc-usernet` which is used to set network devices quota for unprivileged users. By default, your user isn't allowed to create any network device on the host, to change that, add:
-  - `echo "$(id -un) veth lxcbr0 10" | sudo tee -a /etc/lxc/lxc-usernet` (This means that "your-username" is allowed to create up to 10 veth devices connected to the lxcbr0 bridge.)
+    - `echo "$(id -un) veth lxcbr0 10" | sudo tee -a /etc/lxc/lxc-usernet` (This means that "your-username" is allowed to create up to 10 veth devices connected to the lxcbr0 bridge.)
+    - `cat /etc/lxc/lxc-usernet`
 3. The last step is to create an LXC configuration file.
 ```bash
 mkdir -p ~/.config/lxc
@@ -254,23 +273,23 @@ echo "lxc.idmap = g 0 $MS_GID $ME_GID" >> ~/.config/lxc/default.conf
 ```bash
 # Create a container with the given OS template and options.
 lxc-create -t download \
-  -n my-first-debian -- \
-  --dist debian \
-  --release bookworm \
+  -n my-first-ubuntu -- \
+  --dist ubuntu \
+  --release jammy \
   --arch amd64
 
 # Start running the container that was just created.
-lxc-start -d -n my-first-debian
+lxc-start -d -n my-first-ubuntu
 # List all the containers in the host system.
 lxc-ls --fancy
 # Get a default shell session inside the container.
-lxc-attach -n my-first-debian
+lxc-attach -n my-first-ubuntu
 # Run ID and exit
 id
 ps axfwwu
 exit
 # Stop the container.
-lxc-stop -n my-first-debian
+lxc-stop -n my-first-ubuntu
 # Permanently delete the container.
-lxc-destroy -n my-first-debian
+lxc-destroy -n my-first-ubuntu
 ```

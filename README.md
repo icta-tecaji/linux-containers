@@ -1,9 +1,7 @@
 # Linux Containers
 
-## Exam
-
-- The exam can be taken [here](https://forms.gle/NgTUYvXNeqiUfnidA).
-- Satisfaction Survey (Topic: Linux) can be taken [here](https://forms.gle/rjXngid9YDPB3kas6).
+## General info
+- Satisfaction Survey can be taken [here](https://forms.gle/JxM2oBkVsT4uhs4m6).
 
 ## Content
 
