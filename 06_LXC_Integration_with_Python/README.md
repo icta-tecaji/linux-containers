@@ -16,11 +16,12 @@ The python bindings are typically very close to the C API except for the part wh
 
 - Update and upgrade the system: `sudo apt update && sudo apt upgrade -y`
 - Install the LXC development libraries on Ubuntu with the following command: `sudo apt install -y liblxc-dev`
-- `sudo su`
+- Install the gcc compiler: `sudo apt install -y build-essential`
+- `sudo su` (**only if you want to use privileged containers**)
 - Create a new folder: `mkdir -p ~/linux-containers-dev && cd ~/linux-containers-dev`
 - Check if Python 3 is installed: `python3 --version`
-- Install the python3-venv package: `apt install -y python3.8-venv`
-- Install Python Development Libraries: `apt install -y python3.8-dev`
+- Install the python3-venv package: `sudo apt install -y python3.10-venv` (remove `sudo` if you are already in the root shell)
+- Install Python Development Libraries: `sudo apt install -y python3.10-dev` (remove `sudo` if you are already in the root shell)
 - Create a virtual environment: `python3 -m venv .venv`
 - Activate the virtual environment: `source .venv/bin/activate`
 - Upgrade pip: `pip install --upgrade pip`
@@ -31,6 +32,7 @@ The python bindings are typically very close to the C API except for the part wh
 Run the Python interpreter and import the lxc module:
 
 ```python
+>> python3
 >> import lxc
 >> exit()
 ```
@@ -203,4 +205,4 @@ if not c.destroy():
 - Exit the virtual environment: `deactivate`
 - Remove the virtual environment: `rm -rf .venv`
 - Remove the linux-containers-dev folder: `cd .. && rm -rf linux-containers-dev`
-- Exit the root shell: `exit`
+- Exit the root shell: `exit` (if you are in the root shell)
