@@ -39,8 +39,8 @@ Let's create a new container and explore its network settings:
 # Create and start a new container
 sudo lxc-create -t download \
   -n br1 -- \
-  --dist debian \
-  --release bookworm \
+  --dist ubuntu \
+  --release jammy \
   --arch amd64
 
 sudo lxc-start -n br1
@@ -50,13 +50,15 @@ sudo lxc-info -n br1
 
 Notice the name of the virtual interface that was created on the host OS – veth<ID>, from the output of the lxc-info command. The interface should have been added as a port to the bridge. Let's confirm this using the brctl utility: `brctl show`
 
-Listing all interfaces on the host shows the bridge and the virtual interface associated with the container: `ifconfig`
+Listing all interfaces on the host shows the bridge and the virtual interface associated with the container: 
+- `sudo apt install net-tools`
+- `ifconfig`
 
 Notice the IP address assigned to the lxcbr0 interface, it's the same IP address passed as the listen-address argument to the dnsmasq process. Let's examine the network interface and the routes inside the container by attaching to it first:
 ```bash
 sudo lxc-attach -n br1
-ifconfig
-route -n
+ip addr
+exit
 ```
 
 The IP address assigned to the eth0 interface by dnsmasq is part of the 10.0.3.0/24
