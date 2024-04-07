@@ -7,7 +7,7 @@ Sources:
 
 --- 
 
-Nowadays, deploying applications inside some sort of a Linux container is a widely adopted practice, primarily due to the evolution of the tooling and the ease of use it presents.
+Nowadays, deploying applications inside some sort of a Linux container is a widely adopted practice, primarily due to the evolution of the tooling and the ease of use it presets.
 
 
 ## Containerization vs traditional virtualization
@@ -18,7 +18,7 @@ Virtualization achieved such isolated operating system environments using hyperv
 Containerization differs from traditional virtualization technologies and offers many advantages over traditional virtualization:
 - Containers are **lightweight** compared to traditional virtual machines.
 - Unlike containers, virtual machines require emulation layers (either software or hardware), which consume more resources and add additional overhead.
-- Containers share resources with the underlying host machine, with user space and process isolations.
+- Containers share resources with the underlying host machine, with user space and use process isolation.
 - Due to the lightweight nature of containers, more containers can be run per host than virtual machines per host.
 - Starting a container happens nearly instantly compared to the slower boot process of virtual machines.
 - Containers are portable and can reliably regenerate a system environment with required software packages, irrespective of the underlying host operating system.
