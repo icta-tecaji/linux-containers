@@ -186,6 +186,8 @@ The `cgroup-tools` package provides several management utilities, including:
 ```bash
 # first check if cgroup subsystems are available
 cat /proc/cgroups
+# check if v2 is used
+mount | grep cgroup2
 # mount specific subsystems if required
 # sudo mkdir /sys/fs/cgroup/blkio
 # sudo mount -t cgroup -o blkio blkio /sys/fs/cgroup/blkio
@@ -322,13 +324,14 @@ sudo ip link add nsbr0 type bridge # create new bridge
 sudo ip link set nsbr0 up # bring it up
 sudo ip addr add 10.0.0.1/24 dev nsbr0 # add ip (e.g., to use it as default gw)
 sudo ip netns exec mynetns ip route add default via 10.0.0.1 # add default route in mynetns
+ip link set veth1_a master nsbr0 # add veth1_a to nsbr0
 ```
 
 Optional: Enable IP forwarding and set up NAT using masquerade rule to enable Internet connectivity:
 
 ```bash
-sudo echo 1 > /proc/sys/net/ipv4/ip_forward # enable ip forwarding
-sudo iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE # masquerade
+sudo echo 1 | sudo tee /proc/sys/net/ipv4/ip_forward # enable ip forwarding
+sudo iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE # masquerade (replace eth0 with your default gateway interface)
 ```
 
 Test connectivity:
@@ -376,7 +379,7 @@ A rootfs can further be reduced in size by making it contain just the applicatio
 
 ### Creating and starting containers
 
-We can not combine all the described mechanisms to start a Linux container.
+We can now combine all the described mechanisms to start a Linux container.
 
 1. Creating isolated namespaces.
     - e.g., isolating the filesystem similar to chroot, creating new netns with independent networking stack, etc.
