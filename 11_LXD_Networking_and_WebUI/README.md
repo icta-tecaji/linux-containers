@@ -317,4 +317,4 @@ Then enable the UI in the snap:
 
 Try to access UI by visiting `https://<IP>:8443/`
 
-Follow on-screen instructions to add client certificates.
+Follow on-screen instructions to add client certificates. Attempt Private Browsing if your browser is not sending a client certificate.
