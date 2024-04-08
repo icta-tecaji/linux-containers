@@ -17,7 +17,7 @@ Each storage pool uses a storage driver. The following storage drivers are suppo
 - ZFS - `zfs`
 - Ceph RBD - `ceph`
 - CephFS - `cephfs`
- -Ceph Object - `cephobject`
+- Ceph Object - `cephobject`
 
 > Note: nearly all storage drivers support some kind of optimizations. To make instance creation near instantaneous, LXD clones a pre-made image volume when creating an instance rather than unpacking the image tarball from scratch. LXD uses this optimized transfer when transferring instances and snapshots between storage pools that use the same storage driver, if the storage driver supports optimized transfer and the optimized transfer is actually quicker. Otherwise, LXD uses rsync to transfer container and file system volumes, or raw block transfer to transfer virtual machine and custom block volumes.
 
@@ -82,7 +82,7 @@ If using ZFS we can share the container's filesystem to host by manually mountin
 # check if zfs mountpoint is set
 sudo zfs get mountpoint default/containers/first
 # legacy indicated manal mounting is available
-sudo mount -t default/containers/first /mnt
+sudo mount -t zfs default/containers/first /mnt
 ```
 
 We can also use LXD's SSHFS mounting into a local path on your client:
@@ -228,7 +228,7 @@ After creating a custom storage volume, you can add it to one or more instances 
 Alternatively, you can add a disk device for the storage volume in the usual way:
 - `lxc config device add <instance_name> <device_name> disk pool=<pool_name> source=<volume_name> [path=<location>]`
 
-> Note: When you attach a storage volume to an instance as a disk device, you can configure I/O limits for it. To do so, set the limits.read, limits.write or limits.max properties to the corresponding limits. This is implemented using blkio cgroups. Example: `lxc config device set first opt_device limits.read=4`
+> Note: When you attach a storage volume to an instance as a disk device, you can configure I/O limits for it. To do so, set the limits.read, limits.write or limits.max properties to the corresponding limits. This is implemented using blkio cgroups. Example: `lxc config device set first opt_device limits.read=4MiB`
 
 ### Configure Volumes
 
@@ -249,6 +249,9 @@ To resize a storage volume, set its size configuration:
 - `lxc storage volume set <pool_name> <volume_name> size <new_size>`
 
 > Shrinking only works for filesystem-type volumes.
+
+To resize a rootfs for a container, override the default profile settings for a `root` device:
+- `lxc config device override <container_name> root size=<X>GiB`
 
 ### Move and Copy Volumes
 

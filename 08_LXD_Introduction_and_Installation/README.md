@@ -39,7 +39,9 @@ LXD provides **a better user experience to LXC** by building on top of LXC. LXD 
 ### Releases
 
 The current LTS releases are `LXD 5.0.x` (snap channel 5.0/stable) and `LXD 4.0.x` (snap channel 4.0/stable).
-- The latest available version of the LXD package in Ubuntu is `5.19` (nov 2023).
+- The latest available version of the LXD package in Ubuntu is `5.20` (April 2024).
+
+> Note: LXD in now under Canonical and LinuxContainers.org's has created an Incus fork. This brings some incompatibilities (e.g., linuxcontainers image: server not working with LXD). This will be addressed in later leases.
 
 The LTS releases **follow the Ubuntu release schedule and are released every two years**:
 - `LXD 5.0` is supported until June 2027 and gets frequent bugfix and security updates, but does not receive any feature additions. Updates to this release happen approximately every six months, but this schedule should be seen as a rough estimation that can change based on priorities and discovered bugs.

@@ -14,11 +14,11 @@ LXD supports various network types:
 - `bridged`: Uses an existing bridge on the host and creates a virtual device pair to connect the host bridge to the instance.
 - `macvlan`: Sets up a new network device based on an existing one, but using a different MAC address.
 - `sriov`: Passes a virtual function of an SR-IOV-enabled physical network device into the instance.
-physical: Passes a physical device from the host through to the instance. The targeted device will vanish from the host and appear in the instance.
+- `physical`: Passes a physical device from the host through to the instance. The targeted device will vanish from the host and appear in the instance.
 - `ovn`: Uses an existing OVN network and creates a virtual device pair to connect the instance to it.
 - `ipvlan`: Sets up a new network device based on an existing one, using the same MAC address but a different IP.
 - `p2p`: Creates a virtual device pair, putting one side in the instance and leaving the other side on the host.
-routed: Creates a virtual device pair to connect the host to the instance and sets up static routes and proxy ARP/NDP entries to allow the instance to join the network of a designated parent interface.
+- `routed`: Creates a virtual device pair to connect the host to the instance and sets up static routes and proxy ARP/NDP entries to allow the instance to join the network of a designated parent interface.
 
 Network types are generally divided in two categories:
 - `managed networks`
@@ -118,7 +118,7 @@ View network info:
 
 List all network allocations and leases:
 - `lxc network list-allocations`
-- `lxc network list-leases`
+- `lxc network list-leases <network>`
 
 **Create a new network**
 - `lxc network create mbr0`

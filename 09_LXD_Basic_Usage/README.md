@@ -94,6 +94,12 @@ The lxc CLI command comes pre-configured with the following **default remote ima
     - `images:`: This server provides unofficial images for a variety of Linux distributions. The images are maintained by the Linux Containers team and are built to be compact and minimal. (https://images.linuxcontainers.org/)
     - `local`: Local LXD instance and its image store
 
+> Note: due to LXD and Incus parting ways, please reconfigure the default LXD 3rd party image server if using LXD version < 5.21.1 [source](https://discourse.ubuntu.com/t/new-lxd-image-server-available-images-lxd-canonical-com/43824).
+```
+lxc remote remove images
+lxc remote add images https://images.lxd.canonical.com --protocol=simplestreams
+```
+
 Remote servers that use the simple streams format are **pure image servers**. LXD supports the [following types](https://documentation.ubuntu.com/lxd/en/latest/reference/remote_image_servers/#remote-server-types) of remote image servers:
 
 - Simple streams servers
@@ -351,7 +357,7 @@ Lastly, to apply or remove profiles from an instance:
 - `lxc profile remove <instance_name> <profile_name>`
 
 Or configure profiles during container creation time:
-- `lxc launch <image> <instance_name> --profile <profile> --profile <profile> ...
+- `lxc launch <image> <instance_name> --profile <profile> --profile <profile> ...`
 
 > Example: create an autoboot profile
 > ```bash
