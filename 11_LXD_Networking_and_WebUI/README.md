@@ -162,6 +162,13 @@ or port-forward specific ports only:
 - `lxc network forward port add <network_name> <listen_address> <protocol> <listen_ports> <target_address> [<target_ports>]`
 
 
+> Note: If using LXD's NAT and your containers do not have network connectivity or port forwards to them do not work, make sure to reconfigure LXD bridge to use the correct host interface as gateway.
+> ```bash
+> # Sample config for lxdbr0
+> lxc network set lxdbr0 ipv4.nat true
+> lxc network set lxdbr0 ipv4.nat.address <HOST_GW_IFACE_IP> # This command is undocumented in older versions of LXD
+> ```
+
 ### Example: Masquerading Guest IP
 
 > This is done by default if using lxdbr0
