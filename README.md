@@ -1,3 +1,6 @@
+# DEPRECATION WARNING: The course updates are available in the new repo: https://github.com/ltfe-ict-academy/cloud-linux-containers/tree/main
+
+
 # Linux Containers
 
 ## General info
