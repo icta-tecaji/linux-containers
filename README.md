@@ -2,10 +2,6 @@
 
 
 # Linux Containers
-
-## General info
-- Satisfaction Survey can be taken [here](https://forms.gle/JxM2oBkVsT4uhs4m6).
-
 ## Content
 
 ### [Introduction to Linux Containers](./01_Introduction_to_Linux_Containers/README.md)
